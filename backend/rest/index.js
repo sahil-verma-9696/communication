@@ -9,6 +9,7 @@ import messagingRoutes from "./messaging/route.js";
 import attachmentsRoutes from "./attachments/route.js";
 import friendshipRoutes from "./friend-managment/route.js";
 import notificationRoutes from "./notifications/route.js";
+import channelRoutes from "./channel-managment/route.js";
 
 import { errorHandler } from "../middleware/errorMiddleware.js";
 import { protect } from "../middleware/authMiddleware.js";
@@ -42,7 +43,10 @@ app.use("/messages", protect, messagingRoutes);
 app.use("/attachments", protect, attachmentsRoutes);
 
 // notifications namespace
-app.use("/notifications", protect, notificationRoutes)
+app.use("/notifications", protect, notificationRoutes);
+
+// channel-managment namespace
+app.use("/channels", protect, channelRoutes);
 
 // hanndle errors
 app.use(errorHandler);

@@ -182,82 +182,100 @@ const MessageArea = (props) => {
   return (
     <ScrollArea className="flex-1 p-4 overflow-auto">
       <div className="space-y-4">
-        {messages.map((message) => {
-          let isOwn = false;
-          const sender_id =
-            typeof message.sender_id === "object"
-              ? message.sender_id._id
-              : message.sender_id;
+        {messages
+          .filter((msg) => {
+            const senderId = String(
+              typeof msg.sender_id === "object"
+                ? msg.sender_id._id
+                : msg.sender_id
+            );
+            const recipientId = String(
+              typeof msg.recipient_id === "object"
+                ? msg.recipient_id._id
+                : msg.recipient_id
+            );
 
-          isOwn = sender_id === user?._id;
-          return (
-            <div
-              key={message._id}
-              ref={(el) => {
-                if (el) {
-                  messageRefs.current.set(message._id, el);
-                }
-              }}
-              data-message-id={message._id}
-              className={`flex ${
-                isOwn ? "justify-end" : "justify-start"
-              } group`}
-            >
-              <div className="flex items-start space-x-2 max-w-[85%]">
-                {isOwn && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => deleteMessage(message._id)}
-                        className="text-red-600 focus:text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete Message
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
+            return (
+              (senderId === user?._id && recipientId === friendId) ||
+              (senderId === friendId && recipientId === user?._id)
+            );
+          })
+          .map((message) => {
+            let isOwn = false;
+            const sender_id =
+              typeof message.sender_id === "object"
+                ? message.sender_id._id
+                : message.sender_id;
 
-                <div
-                  className={`px-4 py-2 rounded-2xl ${
-                    isOwn
-                      ? "bg-primary text-primary-foreground rounded-br-sm"
-                      : "bg-muted rounded-bl-sm"
-                  }`}
-                >
-                  <p className="text-sm whitespace-pre-wrap break-words">
-                    {message.content}
-                  </p>
+            isOwn = sender_id === user?._id;
+            return (
+              <div
+                key={message._id}
+                ref={(el) => {
+                  if (el) {
+                    messageRefs.current.set(message._id, el);
+                  }
+                }}
+                data-message-id={message._id}
+                className={`flex ${
+                  isOwn ? "justify-end" : "justify-start"
+                } group`}
+              >
+                <div className="flex items-start space-x-2 max-w-[85%]">
+                  {isOwn && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => deleteMessage(message._id)}
+                          className="text-red-600 focus:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Message
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+
                   <div
-                    className={`flex items-center justify-between mt-1 gap-2 ${
+                    className={`px-4 py-2 rounded-2xl ${
                       isOwn
-                        ? "text-primary-foreground/70"
-                        : "text-muted-foreground"
+                        ? "bg-primary text-primary-foreground rounded-br-sm"
+                        : "bg-muted rounded-bl-sm"
                     }`}
                   >
-                    <span className="text-xs">
-                      {formatTime(message.sent_at)}
-                    </span>
-                    {isOwn && (
-                      <span className="text-xs flex-shrink-0">
-                        {message.is_read ? "✓✓" : "✓"}
+                    <p className="text-sm whitespace-pre-wrap break-words">
+                      {message.content}
+                    </p>
+                    <div
+                      className={`flex items-center justify-between mt-1 gap-2 ${
+                        isOwn
+                          ? "text-primary-foreground/70"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      <span className="text-xs">
+                        {formatTime(message.sent_at)}
                       </span>
-                    )}
+                      {isOwn && (
+                        <span className="text-xs flex-shrink-0">
+                          {message.is_read ? "✓✓" : "✓"}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
         <div ref={messagesEndRef} />
       </div>
     </ScrollArea>

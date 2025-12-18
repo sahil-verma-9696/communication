@@ -12,28 +12,52 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useChatSocketContext } from "@/contexts/ChatSocket";
 import { useEffect, useState } from "react";
+import { useGlobalContext } from "@/contexts/Global";
 
-export function Notifications({
-  notifications = [],
-  onMarkAllAsRead,
-  onMarkAsRead,
-  onDelete,
-}) {
+export function Notifications({ onMarkAllAsRead }) {
+  const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  const { user } = useGlobalContext();
   const { socket } = useChatSocketContext();
+
+  // 🔔 WebSocket handler for new notifications
   useEffect(() => {
     if (!socket) return;
     const wsNotificationHandler = (data) => {
-      console.log(data);
+      console.log("new_notification:", data);
       setUnreadCount(data.count);
     };
     socket.on("new_notification", wsNotificationHandler);
     return () => {
       socket.off("new_notification", wsNotificationHandler);
     };
-  });
+  }, [socket]);
+
+  // 🔥 Fetch notifications only when dropdown opens
+  const handleOpenChange = async (open) => {
+    if (open) {
+      await getUnreadedNotifications(
+        user._id,
+        setNotifications,
+        setUnreadCount
+      );
+    }
+  };
+
+  const onMarkAsRead = (notificationId) => {
+    return async (e) => {
+      await markNotificationAsRead(notificationId);
+    };
+  };
+
+  const onDelete = (notificationId, setNotifications) => async (e) => {
+    setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
+    await deleteNotification(notificationId);
+  };
+
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
@@ -80,32 +104,35 @@ export function Notifications({
                 <div className="space-y-1">
                   {notifications.map((n) => (
                     <div
-                      key={n.id}
+                      key={n._id}
                       className={`p-3 border-b last:border-b-0 ${
-                        !n.isRead ? "bg-muted/50" : ""
+                        !n.is_read ? "bg-muted/50" : ""
                       }`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2">
-                            <p className="font-medium text-sm">{n.title}</p>
-                            {!n.isRead && (
+                            <p className="font-medium text-sm">
+                              {n.type + " by " + n.metadata?.sender_name}
+                            </p>
+                            {!n.is_read && (
                               <div className="h-2 w-2 bg-blue-500 rounded-full" />
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {n.message}
+                            {n.metadata?.message_preview}
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {n.time}
+                            {new Date(n.created_at).toLocaleString()}
                           </p>
                         </div>
+
                         <div className="flex space-x-1">
-                          {!n.isRead && (
+                          {!n.is_read && (
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => onMarkAsRead?.(n.id)}
+                              onClick={onMarkAsRead?.(n._id, setNotifications)}
                             >
                               <Check className="h-3 w-3" />
                             </Button>
@@ -113,7 +140,7 @@ export function Notifications({
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => onDelete?.(n.id)}
+                            onClick={onDelete?.(n._id, setNotifications)}
                           >
                             <X className="h-3 w-3" />
                           </Button>
@@ -129,4 +156,35 @@ export function Notifications({
       </DropdownMenuContent>
     </DropdownMenu>
   );
+}
+
+async function getUnreadedNotifications(
+  userId,
+  setNotification,
+  setUnreadCount
+) {
+  const res = await fetch(
+    `http://localhost:8000/notifications/user/${userId}`,
+    {
+      credentials: "include",
+    }
+  );
+  const data = await res.json();
+  console.log("fetched:", data);
+  setNotification(data.data.notifications);
+  setUnreadCount(data.data.notifications.filter((n) => !n.is_read).length);
+}
+
+async function markNotificationAsRead(notificationId) {
+  await fetch(`http://localhost:8000/notifications/${notificationId}/read`, {
+    method: "PUT",
+    credentials: "include",
+  });
+}
+
+async function deleteNotification(notificationId) {
+  await fetch(`http://localhost:8000/notifications/${notificationId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
 }

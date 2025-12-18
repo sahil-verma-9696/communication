@@ -8,9 +8,12 @@ import { me } from "./me.controller.js";
 
 const router = Router();
 
+// set cookie
 router.post("/signup", signup);
 router.post("/login", login);
+
 router.get("/me", protect, me);
+
 router.get("/logout",protect,logout)
 
 export default router;

@@ -53,6 +53,7 @@ export function socketAuthAndMapping(
 
       // On disconnect
       socket.on("disconnect", async () => {
+        // Remove user from active users list
         idToSocketMap.delete(userId);
         activeUsersIds.delete(userId);
         idToStatusMap.set(userId, {

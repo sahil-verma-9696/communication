@@ -7,18 +7,26 @@ import { socketAuthAndMapping } from "../middleware/socketAuthMapping.js";
 function initialiseSocketServer(httpServer, options) {
   const socketServer = new Server(httpServer, {
     ...options,
-    cors: { origin: "*" },
+    cors: { origin: "http://localhost:5173" },
     pingInterval: 2000,
     pingTimeout: 1000,
   });
 
+  // _id -> socket.id
   const idToSocketMap = new Map();
+
+  // _id -> { status: active | online | offline, lastSeen: Date }
   const idToStatusMap = new Map();
+
+  // [ userId_1, userId_2, userId_3, ... ] status : active
   const activeUsersIds = new Set();
+
+  // [ userId_1, userId_2, userId_3, ... ] status : online
   const onlineUsersIds = new Set();
 
   const namespaces = ["/ws", "/ws/chat", "/ws/notifications"];
 
+  // Middleware to map sockets to users
   namespaces.forEach((ns) => {
     const namespaceInstance = socketServer.of(ns);
     namespaceInstance.use(
