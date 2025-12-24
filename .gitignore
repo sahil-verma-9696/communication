@@ -1,5 +1,19 @@
 backend/node_modules
+nest-server/node_modules
 fronted/node_modules
 
+backend/package-lock.json
+nest-server/package-lock.json
+fronted/package-lock.json
+
+backend/build
+backend/dist
+nest-server/build
+nest-server/dist
+fronted/build
+fronted/dist
+
+
+nest-server/*.env
 backend/*.env
 fronted/.env
