@@ -8,6 +8,7 @@ import { FriendsModule } from './friends/friends.module';
 import { FriendRequestsModule } from './friendrequest/friendrequests.module';
 import { NotificationModule } from './notification/notification.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { SocketModule } from './socket/socket.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -24,6 +25,7 @@ import configuration from './config/configuration';
     FriendsModule,
     FriendRequestsModule,
     NotificationModule,
+    SocketModule,
   ],
   controllers: [AppController],
   providers: [AppService],

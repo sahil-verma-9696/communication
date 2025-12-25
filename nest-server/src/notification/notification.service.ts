@@ -6,12 +6,14 @@ import {
   NotificationDocument,
   NotificationType,
 } from './schema/notification.schema';
+import { SocketService } from 'src/socket/socket.service';
 
 @Injectable()
 export class NotificationService {
   constructor(
     @InjectModel(Notification.name)
     private readonly notificationModel: Model<NotificationDocument>,
+    private readonly socketService: SocketService,
   ) {}
 
   // ------------------------------------
@@ -37,6 +39,13 @@ export class NotificationService {
       meta: params.meta,
       redirectUrl: params.redirectUrl,
     });
+
+    if (!notification) {
+      throw new Error('Failed to create notification');
+    }
+
+    // send notification via socket
+    this.socketService.sendNotification(params.userId, notification);
 
     return notification;
   }

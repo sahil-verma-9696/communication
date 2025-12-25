@@ -167,6 +167,15 @@ export class FriendRequestsService {
       throw new InternalServerErrorException('Failed to create friendship');
     }
 
+    // 🔔 Send notification
+    await this.notificationService.createNotification({
+      userId: request.sender.toString(),
+      type: NotificationType.FRIEND_REQUEST,
+      title: 'Friend request accepted',
+      message: 'Your friend request has been accepted',
+      triggeredBy: userId,
+    });
+
     return {
       message: 'Friend request accepted',
       request,
@@ -193,6 +202,15 @@ export class FriendRequestsService {
 
     request.status = FriendRequestStatus.REJECTED;
     await request.save();
+
+    // 🔔 Send notification
+    await this.notificationService.createNotification({
+      userId: request.sender.toString(),
+      type: NotificationType.FRIEND_REQUEST,
+      title: 'Friend request rejected',
+      message: 'Your friend request has been rejected',
+      triggeredBy: userId,
+    });
 
     return {
       message: 'Friend request rejected',
