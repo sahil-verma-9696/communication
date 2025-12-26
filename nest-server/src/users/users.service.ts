@@ -41,6 +41,21 @@ export class UsersService {
     return user;
   }
 
+  /**
+   * search users
+   * ------------
+   * query user by name or email, case insensitive
+   * @param q
+   * @returns Promise<User[]>
+   */
+  async searchUsers(q: string) {
+    const regex = new RegExp(q, 'i');
+    const users = await this.userModel
+      .find({ $or: [{ name: regex }, { email: regex }] })
+      .select('-passwordHash');
+    return users;
+  }
+
   async verfiyPassword(id: string, password: string) {
     const ObjectId = new Types.ObjectId(id);
     const user = await this.userModel
