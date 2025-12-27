@@ -1,19 +1,38 @@
+# Backend directory
 backend/node_modules
-nest-server/node_modules
-fronted/node_modules
 
 backend/package-lock.json
-nest-server/package-lock.json
-fronted/package-lock.json
-
 backend/build
 backend/dist
-nest-server/build
-nest-server/dist
+
+backend/*.env
+
+# Frontend directory
+fronted/node_modules
+
 fronted/build
 fronted/dist
 
+fronted/package-lock.json
+
+fronted/.env
+
+# Nest Server directory
+nest-server/node_modules
+nest-server/build
+nest-server/dist
+
+nest-server/package-lock.json
 
 nest-server/*.env
-backend/*.env
-fronted/.env
+
+# App directory
+app/node_modules
+app/build
+app/dist
+app/.expo
+app/expo-env.d.ts
+
+app/package-lock.json
+
+app/*.env

@@ -8,9 +8,6 @@ export class Group {
   @Prop({ type: Types.ObjectId, ref: 'Chat', required: true })
   chat: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'User' })
-  createdBy: Types.ObjectId;
-
   @Prop({ default: false })
   onlyAdminsCanMessage: boolean;
 
