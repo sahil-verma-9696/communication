@@ -3,10 +3,15 @@ import { useEffect, useState } from "react";
 import { SERVER_BASE_URL } from "./use-authContext-logic";
 import { User } from "@/types/authentication.types";
 
+export type UserSearchResult = User & {
+  isFriend: boolean;
+};
 export default function useFriendsTabLogic() {
   const [friends, setFriends] = useState<User[] | null>(null);
   const [query, setQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<User[] | null>(null);
+  const [searchResults, setSearchResults] = useState<UserSearchResult[] | null>(
+    null
+  );
   const { accessToken } = useGlobalContext();
 
   const handleQueryChange = (text: string) => {
@@ -20,8 +25,11 @@ export default function useFriendsTabLogic() {
   };
 
   async function searchUsers(query: string) {
-    const res = await fetch(`${SERVER_BASE_URL}/users?q=${query}`);
+    const res = await fetch(`${SERVER_BASE_URL}/users?q=${query}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
     const data = await res.json();
+    console.log(data, "search users");
     setSearchResults(data);
   }
 

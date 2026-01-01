@@ -48,42 +48,75 @@ export class UsersService {
    * @param q
    * @returns Promise<User[]>
    */
-  async searchUsers(q: string) {
+  async searchUsers(q: string, currentUserId: string) {
     if (!q?.trim()) return [];
 
-    // Escape regex special chars
     const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
     const startsWith = new RegExp(`^${escaped}`, 'i');
     const contains = new RegExp(escaped, 'i');
 
+    const currentUserObjectId = new Types.ObjectId(currentUserId);
+
     return this.userModel.aggregate([
+      // 1️⃣ Text matching
       {
         $match: {
           $or: [{ name: contains }, { email: contains }],
+          _id: { $ne: currentUserObjectId }, // exclude self
         },
       },
+
+      // 2️⃣ Lookup friendship
+      {
+        $lookup: {
+          from: 'friends',
+          let: { userId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $or: [
+                    {
+                      $and: [
+                        { $eq: ['$user', currentUserObjectId] },
+                        { $eq: ['$friend', '$$userId'] },
+                      ],
+                    },
+                    {
+                      $and: [
+                        { $eq: ['$friend', currentUserObjectId] },
+                        { $eq: ['$user', '$$userId'] },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'friendRelation',
+        },
+      },
+
+      // 3️⃣ Compute isFriend
       {
         $addFields: {
+          isFriend: { $gt: [{ $size: '$friendRelation' }, 0] },
           relevance: {
             $switch: {
               branches: [
-                // name startsWith → highest priority
                 {
                   case: { $regexMatch: { input: '$name', regex: startsWith } },
                   then: 4,
                 },
-                // email startsWith
                 {
                   case: { $regexMatch: { input: '$email', regex: startsWith } },
                   then: 3,
                 },
-                // name contains
                 {
                   case: { $regexMatch: { input: '$name', regex: contains } },
                   then: 2,
                 },
-                // email contains
                 {
                   case: { $regexMatch: { input: '$email', regex: contains } },
                   then: 1,
@@ -94,16 +127,21 @@ export class UsersService {
           },
         },
       },
+
+      // 4️⃣ Sorting
       {
         $sort: {
           relevance: -1,
           name: 1,
         },
       },
+
+      // 5️⃣ Cleanup
       {
         $project: {
           passwordHash: 0,
           relevance: 0,
+          friendRelation: 0,
         },
       },
     ]);

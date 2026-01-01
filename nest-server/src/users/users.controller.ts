@@ -7,10 +7,13 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import * as authGuard from 'src/auth/auth.guard';
 
 @Controller('users')
 export class UsersController {
@@ -21,12 +24,17 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
+  @UseGuards(authGuard.AuthGuard)
   @Get()
-  findAll(@Query() query: { q: string }) {
+  findAll(
+    @Query() query: { q: string },
+    @Request() req: authGuard.AuthRequest,
+  ) {
     const { q } = query;
+    const userId = req.user.sub;
 
     if (q) {
-      return this.usersService.searchUsers(q);
+      return this.usersService.searchUsers(q, userId);
     }
 
     return this.usersService.findAll();

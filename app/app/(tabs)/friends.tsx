@@ -1,4 +1,11 @@
-import { StyleSheet, Text, View, FlatList, TextInput } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  TextInput,
+  Button,
+} from "react-native";
 import React from "react";
 import useFriendsTabLogic from "@/hooks/use-friendsTab-logic";
 
@@ -22,9 +29,13 @@ const Friends = () => {
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => {
           return (
-            <Text>
-              {item.name}({item.email})
-            </Text>
+            <View>
+              <View>
+                <Text>{item.name}</Text>
+                {!item.isFriend && <Button title="Add Friend" />}
+              </View>
+              <Text>({item.email})</Text>
+            </View>
           );
         }}
       />
