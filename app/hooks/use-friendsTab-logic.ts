@@ -5,7 +5,25 @@ import { User } from "@/types/authentication.types";
 
 export default function useFriendsTabLogic() {
   const [friends, setFriends] = useState<User[] | null>(null);
+  const [query, setQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<User[] | null>(null);
   const { accessToken } = useGlobalContext();
+
+  const handleQueryChange = (text: string) => {
+    setQuery(text);
+
+    if (text.trim() === "") {
+      setSearchResults(null);
+    } else {
+      searchUsers(text);
+    }
+  };
+
+  async function searchUsers(query: string) {
+    const res = await fetch(`${SERVER_BASE_URL}/users?q=${query}`);
+    const data = await res.json();
+    setSearchResults(data);
+  }
 
   /** Fetching messages */
   useEffect(() => {
@@ -25,5 +43,5 @@ export default function useFriendsTabLogic() {
     })();
   }, [accessToken]);
 
-  return { friends };
+  return { friends, query, handleQueryChange, searchUsers, searchResults };
 }

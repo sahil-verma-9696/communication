@@ -49,11 +49,64 @@ export class UsersService {
    * @returns Promise<User[]>
    */
   async searchUsers(q: string) {
-    const regex = new RegExp(q, 'i');
-    const users = await this.userModel
-      .find({ $or: [{ name: regex }, { email: regex }] })
-      .select('-passwordHash');
-    return users;
+    if (!q?.trim()) return [];
+
+    // Escape regex special chars
+    const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    const startsWith = new RegExp(`^${escaped}`, 'i');
+    const contains = new RegExp(escaped, 'i');
+
+    return this.userModel.aggregate([
+      {
+        $match: {
+          $or: [{ name: contains }, { email: contains }],
+        },
+      },
+      {
+        $addFields: {
+          relevance: {
+            $switch: {
+              branches: [
+                // name startsWith → highest priority
+                {
+                  case: { $regexMatch: { input: '$name', regex: startsWith } },
+                  then: 4,
+                },
+                // email startsWith
+                {
+                  case: { $regexMatch: { input: '$email', regex: startsWith } },
+                  then: 3,
+                },
+                // name contains
+                {
+                  case: { $regexMatch: { input: '$name', regex: contains } },
+                  then: 2,
+                },
+                // email contains
+                {
+                  case: { $regexMatch: { input: '$email', regex: contains } },
+                  then: 1,
+                },
+              ],
+              default: 0,
+            },
+          },
+        },
+      },
+      {
+        $sort: {
+          relevance: -1,
+          name: 1,
+        },
+      },
+      {
+        $project: {
+          passwordHash: 0,
+          relevance: 0,
+        },
+      },
+    ]);
   }
 
   async verfiyPassword(id: string, password: string) {

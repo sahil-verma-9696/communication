@@ -22,14 +22,14 @@ export class UsersController {
   }
 
   @Get()
-  findAll() {
-    return this.usersService.findAll();
-  }
-
-  @Get()
-  searchUsers(@Query() query: { q: string }) {
+  findAll(@Query() query: { q: string }) {
     const { q } = query;
-    return this.usersService.searchUsers(q);
+
+    if (q) {
+      return this.usersService.searchUsers(q);
+    }
+
+    return this.usersService.findAll();
   }
 
   @Get(':id')

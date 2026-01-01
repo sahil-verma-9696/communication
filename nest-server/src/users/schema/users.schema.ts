@@ -41,3 +41,5 @@ UserSchema.methods.comparePassword = function (
 ): Promise<boolean> {
   return bcrypt.compare(plainPassword, this.passwordHash);
 };
+
+UserSchema.index({ email: 1, name: 1 }, { unique: true });
