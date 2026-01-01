@@ -11,9 +11,14 @@ import useFriendsTabLogic from "@/hooks/use-friendsTab-logic";
 
 const Friends = () => {
   const ctx = useFriendsTabLogic();
-  const { friends, query, handleQueryChange, searchResults } = ctx;
+  const {
+    friends,
+    query,
+    handleQueryChange,
+    handleAddFriendClick,
+    searchResults,
+  } = ctx;
 
-  if (friends && friends.length === 0) return <Text>No friends</Text>;
   if (!friends) return <Text>Loading...</Text>;
 
   return (
@@ -32,7 +37,12 @@ const Friends = () => {
             <View>
               <View>
                 <Text>{item.name}</Text>
-                {!item.isFriend && <Button title="Add Friend" />}
+                {!item.isFriend && (
+                  <Button
+                    onPress={handleAddFriendClick(item._id)}
+                    title="Add Friend"
+                  />
+                )}
               </View>
               <Text>({item.email})</Text>
             </View>
@@ -40,13 +50,16 @@ const Friends = () => {
         }}
       />
       <Text>friends</Text>
-      <FlatList
-        data={friends}
-        keyExtractor={(item) => item._id}
-        renderItem={({ item }) => {
-          return <Text>{item.name}</Text>;
-        }}
-      />
+      {friends && friends.length === 0 && <Text>No friends</Text>}
+      {friends && friends.length > 0 && (
+        <FlatList
+          data={friends}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => {
+            return <Text>{item.name}</Text>;
+          }}
+        />
+      )}
     </View>
   );
 };

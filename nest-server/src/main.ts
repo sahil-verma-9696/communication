@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import morgan from 'morgan';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,6 +14,7 @@ async function bootstrap() {
     ],
     credentials: true, // 👈 if using cookies or auth headers
   });
+  app.use(morgan('dev'));
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

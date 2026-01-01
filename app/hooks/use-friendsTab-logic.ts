@@ -24,6 +24,10 @@ export default function useFriendsTabLogic() {
     }
   };
 
+  const handleAddFriendClick = (friendId: string) => () => {
+    sendFriendRequest(friendId);
+  };
+
   async function searchUsers(query: string) {
     const res = await fetch(`${SERVER_BASE_URL}/users?q=${query}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
@@ -31,6 +35,24 @@ export default function useFriendsTabLogic() {
     const data = await res.json();
     console.log(data, "search users");
     setSearchResults(data);
+  }
+
+  async function sendFriendRequest(recieverId: string) {
+    console.log(recieverId, "recieverId");
+    try {
+      const res = await fetch(`${SERVER_BASE_URL}/friendrequests`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ friendId: recieverId }),
+      });
+      const data = await res.json();
+      console.log(data, "send friend request");
+    } catch (error) {
+      console.error("Error sending friend request:", error);
+    }
   }
 
   /** Fetching messages */
@@ -51,5 +73,12 @@ export default function useFriendsTabLogic() {
     })();
   }, [accessToken]);
 
-  return { friends, query, handleQueryChange, searchUsers, searchResults };
+  return {
+    friends,
+    query,
+    handleQueryChange,
+    handleAddFriendClick,
+    searchUsers,
+    searchResults,
+  };
 }

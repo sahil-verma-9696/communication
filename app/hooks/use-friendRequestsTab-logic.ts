@@ -9,7 +9,9 @@ export type FriendRequest = {
   receiver: User;
 };
 export default function useFriendRequestsTabLogic() {
-  const [friendRequests, setFriendRequests] = useState<FriendRequest[] | null>(null);
+  const [friendRequests, setFriendRequests] = useState<FriendRequest[] | null>(
+    null
+  );
   const { accessToken } = useGlobalContext();
 
   /** Fetching */
@@ -21,7 +23,7 @@ export default function useFriendRequestsTabLogic() {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         const resData = await res.json();
-        console.log(resData, "resData");
+        console.log("friend requests ::: ", resData);
         setFriendRequests(resData);
       } catch (error) {
         console.error("Error fetching chats:", error);
