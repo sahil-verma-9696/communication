@@ -14,7 +14,7 @@ async function bootstrap() {
     ],
     credentials: true, // 👈 if using cookies or auth headers
   });
-  app.use(morgan('dev'));
+  app.use(morgan('combined'));
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
