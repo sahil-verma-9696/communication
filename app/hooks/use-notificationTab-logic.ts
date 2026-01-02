@@ -2,8 +2,14 @@ import { useGlobalContext } from "@/context/global.context";
 import { useEffect, useState } from "react";
 import { SERVER_BASE_URL } from "./use-authContext-logic";
 
+export type Notification = {
+  _id: string;
+  title: string;
+  message: string;
+  createdAt: Date;
+};
 export default function useNotificationTabLogic() {
-  const [notification, setNotifications] = useState(null);
+  const [notifications, setNotifications] = useState<Notification[] | null>(null);
   const globalCtx = useGlobalContext();
   const { accessToken } = globalCtx;
   // Fetch notifications
@@ -24,5 +30,5 @@ export default function useNotificationTabLogic() {
       }
     })();
   }, []);
-  return { notification };
+  return { notifications };
 }

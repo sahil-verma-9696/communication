@@ -7,12 +7,33 @@ export type FriendRequest = {
   _id: string;
   sender: User;
   receiver: User;
+  status: "pending" | "accepted" | "rejected";
 };
 export default function useFriendRequestsTabLogic() {
   const [friendRequests, setFriendRequests] = useState<FriendRequest[] | null>(
     null
   );
   const { accessToken } = useGlobalContext();
+
+  const handleFriendRequestAction =
+    (friendRequestId: string, action: "accept" | "reject") => () => {
+      respondToFriendRequest(friendRequestId, action);
+    };
+
+  async function respondToFriendRequest(
+    friendRequestId: string,
+    action: "accept" | "reject"
+  ) {
+    const res = await fetch(
+      `${SERVER_BASE_URL}/friendrequests/${friendRequestId}?action=${action}`,
+      {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }
+    );
+    const data = await res.json();
+    console.log(data, "accept friend request");
+  }
 
   /** Fetching */
   useEffect(() => {
@@ -32,5 +53,5 @@ export default function useFriendRequestsTabLogic() {
     })();
   }, [accessToken]);
 
-  return { friendRequests };
+  return { friendRequests, handleFriendRequestAction };
 }
