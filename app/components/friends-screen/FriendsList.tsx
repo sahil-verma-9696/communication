@@ -1,0 +1,77 @@
+import { View, Text, FlatList } from "react-native";
+import React from "react";
+import getInitials from "@/utils/getInitials";
+import color from "@/styles/color";
+import { useFriendsPageContext } from "@/context/friendsPage.context";
+
+type Props = {};
+
+const FriendsList = (props: Props) => {
+  const ctx = useFriendsPageContext();
+  const { friends } = ctx;
+  return (
+    <View
+      style={{
+        backgroundColor: "white",
+        paddingLeft: 16,
+      }}
+    >
+      <Text style={{ fontSize: 18, fontWeight: "500" }}>Friends</Text>
+      {friends && friends.length === 0 && <Text>No friends</Text>}
+      {friends && friends.length > 0 && (
+        <FlatList
+          data={friends}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => {
+            return (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "start",
+                  backgroundColor: "white",
+                  padding: 16,
+                }}
+              >
+                {/* Avatar */}
+                <View
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 28,
+                    backgroundColor: color.primaryBackground,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    marginRight: 12,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "white",
+                      fontSize: 20,
+                      fontWeight: "600",
+                    }}
+                  >
+                    {getInitials(item.name!)}
+                  </Text>
+                </View>
+
+                {/* User Details */}
+                <View>
+                  <Text style={{ fontSize: 16, fontWeight: "500" }}>
+                    {item.name}
+                  </Text>
+
+                  <Text style={{ fontSize: 14, fontWeight: "300" }}>
+                    {item.email}
+                  </Text>
+                </View>
+              </View>
+            );
+          }}
+        />
+      )}
+    </View>
+  );
+};
+
+export default FriendsList;

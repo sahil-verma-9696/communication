@@ -2,18 +2,45 @@ import { useGlobalContext } from "@/context/global.context";
 import { useEffect, useState } from "react";
 import { SERVER_BASE_URL } from "./use-authContext-logic";
 import { User } from "@/types/authentication.types";
+import { FriendsPageContextType } from "@/context/friendsPage.context";
 
 export type UserSearchResult = User & {
   isFriend: boolean;
 };
-export default function useFriendsTabLogic() {
+export default function useFriendsTabLogic(): FriendsPageContextType {
+  /********************************************************
+   * ********************** Local States *********************
+   *************************************************************/
   const [friends, setFriends] = useState<User[] | null>(null);
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<UserSearchResult[] | null>(
     null
   );
+  const [friendsLoading, setFriendsLoading] = useState(false);
+  const [searchResultsLoading, setSearchResultsLoading] = useState(false);
+
+  /********************************************************
+   * ********************** Other Hooks *********************
+   *************************************************************/
   const { accessToken } = useGlobalContext();
 
+  /********************************************************
+   * ********************** Handlers *********************
+   *************************************************************/
+
+  /**
+   * handle friend click
+   * -------------------
+   * @param friendId
+   * @returns
+   */
+  const handleFriendClick = (friendId: string) => () => {};
+
+  /**
+   * handle query change
+   * -------------------
+   * @param text
+   */
   const handleQueryChange = (text: string) => {
     setQuery(text);
 
@@ -24,19 +51,41 @@ export default function useFriendsTabLogic() {
     }
   };
 
+  /**
+   * handle add friend click
+   * -------------------
+   * @param friendId
+   * @returns
+   */
   const handleAddFriendClick = (friendId: string) => () => {
     sendFriendRequest(friendId);
   };
 
+  /********************************************************
+   * ********************** Functions *********************
+   *************************************************************/
+
+  /**
+   * search users
+   * ------------
+   * @param query
+   */
   async function searchUsers(query: string) {
+    setSearchResultsLoading(true);
     const res = await fetch(`${SERVER_BASE_URL}/users?q=${query}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     const data = await res.json();
     console.log(data, "search users");
     setSearchResults(data);
+    setSearchResultsLoading(false);
   }
 
+  /**
+   * send friend request
+   * -------------------
+   * @param recieverId
+   */
   async function sendFriendRequest(recieverId: string) {
     console.log(recieverId, "recieverId");
     try {
@@ -55,23 +104,34 @@ export default function useFriendsTabLogic() {
     }
   }
 
+  /********************************************************
+   * ********************** Effects *********************
+   *************************************************************/
+
   /** Fetching messages */
   useEffect(() => {
     (async () => {
       if (!accessToken) return;
       try {
+        setFriendsLoading(true);
         const res = await fetch(`${SERVER_BASE_URL}/friends`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         const resData = await res.json();
         console.log(resData, "resData");
         setFriends(resData);
+        setFriendsLoading(false);
       } catch (error) {
         console.error("Error fetching chats:", error);
         setFriends(null);
+        setFriendsLoading(false);
       }
     })();
   }, [accessToken]);
+
+  /********************************************************
+   * ********************** Returns *********************
+   *************************************************************/
 
   return {
     friends,
@@ -80,5 +140,7 @@ export default function useFriendsTabLogic() {
     handleAddFriendClick,
     searchUsers,
     searchResults,
+    friendsLoading,
+    searchResultsLoading,
   };
 }

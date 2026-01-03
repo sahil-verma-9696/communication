@@ -5,6 +5,9 @@ export type ChatPageContextType = {
   selectedChatId: string;
   setSelectedChatId: (chatId: string) => void;
   chats: Chat[] | null;
+  handleChatClick: (chatId: string) => () => void;
+  filters: { id: string; label: string }[];
+  isLoading: boolean;
 };
 
 const ChatPageContext = React.createContext<ChatPageContextType | null>(null);

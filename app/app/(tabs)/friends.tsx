@@ -1,66 +1,47 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  FlatList,
-  TextInput,
-  Button,
-} from "react-native";
+import { StyleSheet, Text, View, FlatList, Button } from "react-native";
 import React from "react";
 import useFriendsTabLogic from "@/hooks/use-friendsTab-logic";
+import SearchBar from "@/components/chat-screen/SearchBar";
+import getInitials from "@/utils/getInitials";
+import color from "@/styles/color";
+import FriendsPageContext from "@/context/friendsPage.context";
+import FriendsList from "@/components/friends-screen/FriendsList";
+import SearchResults from "@/components/friends-screen/SearchResults";
 
 const Friends = () => {
   const ctx = useFriendsTabLogic();
-  const {
-    friends,
-    query,
-    handleQueryChange,
-    handleAddFriendClick,
-    searchResults,
-  } = ctx;
+  const { friends, query, handleQueryChange, friendsLoading } = ctx;
 
-  if (!friends) return <Text>Loading...</Text>;
+  if (friendsLoading)
+    return (
+      <View
+        style={{
+          backgroundColor: "#f5f5f5",
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Text>Friends are Loading...</Text>
+      </View>
+    );
 
   return (
-    <View>
-      <TextInput
-        placeholder="Enter user name or email"
-        value={query}
-        onChangeText={handleQueryChange}
-      />
-      <Text>users</Text>
-      <FlatList
-        data={searchResults}
-        keyExtractor={(item) => item._id}
-        renderItem={({ item }) => {
-          return (
-            <View>
-              <View>
-                <Text>{item.name}</Text>
-                {!item.isFriend && (
-                  <Button
-                    onPress={handleAddFriendClick(item._id)}
-                    title="Add Friend"
-                  />
-                )}
-              </View>
-              <Text>({item.email})</Text>
-            </View>
-          );
-        }}
-      />
-      <Text>friends</Text>
-      {friends && friends.length === 0 && <Text>No friends</Text>}
-      {friends && friends.length > 0 && (
-        <FlatList
-          data={friends}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item }) => {
-            return <Text>{item.name}</Text>;
-          }}
+    <FriendsPageContext.Provider value={ctx}>
+      <View>
+        <SearchBar
+          placeholder="Search User"
+          value={query}
+          onChangeText={handleQueryChange}
         />
-      )}
-    </View>
+
+        {/* Search Results */}
+        <SearchResults />
+
+        {/* Friends list */}
+        <FriendsList />
+      </View>
+    </FriendsPageContext.Provider>
   );
 };
 
