@@ -26,6 +26,8 @@ export default function useFriendsTabLogic(): FriendsPageContextType {
   const [friendsLoading, setFriendsLoading] = useState(false);
   const [searchResultsLoading, setSearchResultsLoading] = useState(false);
   const [startChatLoading, setStartChatLoading] = useState(false);
+  const [sendFriendRequestLoading, setSendFriendRequestLoading] =
+    useState(false);
 
   /********************************************************
    * ********************** Other Hooks *********************
@@ -109,7 +111,7 @@ export default function useFriendsTabLogic(): FriendsPageContextType {
    * @param friendId
    * @returns
    */
-  const handleAddFriendClick = (friendId: string) => () => {
+  const handleSendFriendRequest = (friendId: string) => () => {
     sendFriendRequest(friendId);
   };
 
@@ -138,21 +140,26 @@ export default function useFriendsTabLogic(): FriendsPageContextType {
    * -------------------
    * @param recieverId
    */
-  async function sendFriendRequest(recieverId: string) {
-    console.log(recieverId, "recieverId");
+  async function sendFriendRequest(friendId: string) {
     try {
+      if (!friendId) {
+        throw new Error("friendId id is required");
+      }
+      setSendFriendRequestLoading(true);
       const res = await fetch(`${SERVER_BASE_URL}/friendrequests`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ friendId: recieverId }),
+        body: JSON.stringify({ friendId: friendId }),
       });
       const data = await res.json();
+      setSendFriendRequestLoading(false);
       console.log(data, "send friend request");
     } catch (error) {
       console.error("Error sending friend request:", error);
+      setSendFriendRequestLoading(false);
     }
   }
 
@@ -191,8 +198,9 @@ export default function useFriendsTabLogic(): FriendsPageContextType {
     friendsLoading,
     searchResultsLoading,
     startChatLoading,
+    sendFriendRequestLoading,
     handleQueryChange,
-    handleAddFriendClick,
+    handleSendFriendRequest,
     handleStartChat,
     handleMessage,
   };

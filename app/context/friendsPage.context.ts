@@ -13,8 +13,9 @@ export type FriendsPageContextType = {
   searchResultsLoading: boolean;
   friendsLoading: boolean;
   startChatLoading: boolean;
+  sendFriendRequestLoading: boolean;
   handleQueryChange: (text: string) => void;
-  handleAddFriendClick: (friendId: string) => () => void;
+  handleSendFriendRequest: (friendId: string) => () => void;
   handleStartChat: (friendId: string) => () => void;
   handleMessage: (chatId: string) => () => void;
 };

@@ -9,6 +9,11 @@ export enum FriendRequestStatus {
   REJECTED = 'rejected',
 }
 
+export enum FriendRequestType {
+  SEND = 'send',
+  RECEIVE = 'receive',
+}
+
 @Schema({ timestamps: true })
 export class FriendRequest {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })

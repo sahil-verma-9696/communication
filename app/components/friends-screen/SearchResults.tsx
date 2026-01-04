@@ -13,8 +13,10 @@ const SearchResults = (props: Props) => {
     query,
     searchResultsLoading,
     startChatLoading,
+    sendFriendRequestLoading,
     handleMessage,
     handleStartChat,
+    handleSendFriendRequest,
   } = ctx;
 
   if (searchResultsLoading) {
@@ -101,7 +103,7 @@ const SearchResults = (props: Props) => {
                   {/* Friend Request Button */}
                   {!item.isFriend && (
                     <TouchableOpacity
-                      onPress={() => {}}
+                      onPress={handleSendFriendRequest(item._id)}
                       style={{
                         width: 36,
                         height: 36,
@@ -119,7 +121,7 @@ const SearchResults = (props: Props) => {
                           lineHeight: 22,
                         }}
                       >
-                        +
+                        {sendFriendRequestLoading ? "..." : "+"}
                       </Text>
                     </TouchableOpacity>
                   )}

@@ -10,7 +10,13 @@ import useFriendRequestsTabLogic from "@/hooks/use-friendRequestsTab-logic";
 
 const FriendRequests = () => {
   const ctx = useFriendRequestsTabLogic();
-  const { friendRequests, handleFriendRequestAction } = ctx;
+  const {
+    friendRequests,
+    sendedRequests,
+    receivedRequests,
+    actionResLoading,
+    handleFriendRequestAction,
+  } = ctx;
 
   const [activeTab, setActiveTab] = React.useState<"received" | "sent">(
     "received"
@@ -18,11 +24,8 @@ const FriendRequests = () => {
 
   if (!friendRequests) return <Text>Loading...</Text>;
 
-  const filteredRequests = friendRequests.filter((req) =>
-    activeTab === "received"
-      ? req.status === "pending"
-      : req.status === "accepted"
-  );
+  const filteredRequests =
+    activeTab === "received" ? receivedRequests : sendedRequests;
 
   if (friendRequests.length === 0)
     return <Text style={styles.empty}>No requests</Text>;
@@ -45,14 +48,18 @@ const FriendRequests = () => {
 
       {/* List */}
       <FlatList
-        data={friendRequests}
+        data={filteredRequests}
         keyExtractor={(item) => item._id}
         contentContainerStyle={{ padding: 16 }}
         renderItem={({ item }) => (
           <View style={styles.card}>
             <View style={styles.info}>
-              <Text style={styles.name}>{item.sender.name}</Text>
-              <Text style={styles.email}>{item.sender.email}</Text>
+              <Text style={styles.name}>
+                {item.sender?.name || item.receiver?.name}
+              </Text>
+              <Text style={styles.email}>
+                {item.sender?.email || item.receiver?.email}
+              </Text>
             </View>
 
             {/* Actions */}
@@ -60,16 +67,20 @@ const FriendRequests = () => {
               <View style={styles.actions}>
                 <TouchableOpacity
                   style={styles.accept}
-                  onPress={() => handleFriendRequestAction(item._id, "accept")}
+                  onPress={handleFriendRequestAction(item._id, "accept")}
                 >
-                  <Text style={styles.btnText}>Accept</Text>
+                  <Text style={styles.btnText}>
+                    {actionResLoading ? "Loading..." : "Accept"}
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.reject}
-                  onPress={() => handleFriendRequestAction(item._id, "reject")}
+                  onPress={handleFriendRequestAction(item._id, "reject")}
                 >
-                  <Text style={styles.btnText}>Reject</Text>
+                  <Text style={styles.btnText}>
+                    {actionResLoading ? "Loading..." : "Reject"}
+                  </Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -82,7 +93,15 @@ const FriendRequests = () => {
   );
 };
 
-const Tab = ({ label, active, onPress }) => (
+const Tab = ({
+  label,
+  active,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+}) => (
   <TouchableOpacity
     onPress={onPress}
     style={[styles.tabContainer, active && styles.activeTabContainer]}

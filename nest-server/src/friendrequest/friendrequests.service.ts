@@ -109,6 +109,31 @@ export class FriendRequestsService {
       .find({ receiver: new Types.ObjectId(userId) })
       .populate('sender receiver');
   }
+  async getSentFriendRequests(userId: string) {
+    const senderId = new Types.ObjectId(userId);
+
+    return this.friendRequestModel
+      .find({
+        sender: senderId,
+        status: FriendRequestStatus.PENDING, // optional filter
+      })
+      .populate('receiver', '_id name email')
+      .select('_id receiver status createdAt')
+      .sort({ createdAt: -1 });
+  }
+
+  async getReceivedFriendRequests(userId: string) {
+    const receiverId = new Types.ObjectId(userId);
+
+    return this.friendRequestModel
+      .find({
+        receiver: receiverId,
+        status: FriendRequestStatus.PENDING, // optional filter
+      })
+      .populate('sender', '_id name email')
+      .select('_id sender status createdAt')
+      .sort({ createdAt: -1 });
+  }
 
   async findOne(userId: string, requestId: string) {
     const userObjId = new Types.ObjectId(userId);

@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import * as authGuard from 'src/auth/auth.guard';
 import { FriendRequestsService } from './friendrequests.service';
+import { FriendRequestType } from './schema/friendrequests.schema';
 
 export enum FriendRequestAction {
   ACCEPT = 'accept',
@@ -43,7 +44,17 @@ export class FriendRequestController {
   // TODO : to add flexibile queries
   @UseGuards(authGuard.AuthGuard)
   @Get()
-  findAll(@Request() req: authGuard.AuthRequest) {
+  findAll(
+    @Request() req: authGuard.AuthRequest,
+    @Query() query: { type: FriendRequestType },
+  ) {
+    if (query.type === FriendRequestType.RECEIVE) {
+      return this.friendrequestService.getReceivedFriendRequests(req.user.sub);
+    }
+
+    if (query.type === FriendRequestType.SEND) {
+      return this.friendrequestService.getSentFriendRequests(req.user.sub);
+    }
     return this.friendrequestService.findAll(req.user.sub);
   }
 
