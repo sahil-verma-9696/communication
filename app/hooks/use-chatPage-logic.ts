@@ -3,6 +3,7 @@ import { useGlobalContext } from "@/context/global.context";
 import React from "react";
 import { SERVER_BASE_URL } from "./use-authContext-logic";
 import { router } from "expo-router";
+import { User } from "@/types/authentication.types";
 
 export type Chat = {
   chatId: string;
@@ -14,6 +15,7 @@ export type Chat = {
   type: "direct" | "group";
   role: string;
   unreadCount: number;
+  participant: User | null;
 };
 
 export default function useChatPageLogic(): ChatPageContextType {
@@ -52,6 +54,7 @@ export default function useChatPageLogic(): ChatPageContextType {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         const resData = await res.json();
+        console.log("Chats : ", resData);
         setChats(resData);
         setIsLoading(false);
       } catch (error) {

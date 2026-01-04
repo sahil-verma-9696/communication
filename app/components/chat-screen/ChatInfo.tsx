@@ -25,10 +25,7 @@ const ChatInfo = (props: Props) => {
             flex: 1,
           }}
         >
-          {item.name}
-        </Text>
-        <Text style={{ fontSize: 13, color: "#999", marginLeft: 8 }}>
-          {item.joinedAt}
+          {item.type === "direct" ? item.participant?.name : item.name}
         </Text>
       </View>
       <View

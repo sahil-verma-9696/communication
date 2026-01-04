@@ -52,22 +52,21 @@ export class UsersService {
     if (!q?.trim()) return [];
 
     const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
     const startsWith = new RegExp(`^${escaped}`, 'i');
     const contains = new RegExp(escaped, 'i');
 
     const currentUserObjectId = new Types.ObjectId(currentUserId);
 
     return this.userModel.aggregate([
-      // 1️⃣ Text matching
+      /* 1️⃣ Match users */
       {
         $match: {
           $or: [{ name: contains }, { email: contains }],
-          _id: { $ne: currentUserObjectId }, // exclude self
+          _id: { $ne: currentUserObjectId },
         },
       },
 
-      // 2️⃣ Lookup friendship
+      /* 2️⃣ Friendship lookup */
       {
         $lookup: {
           from: 'friends',
@@ -98,10 +97,67 @@ export class UsersService {
         },
       },
 
-      // 3️⃣ Compute isFriend
+      /* 3️⃣ 🔥 Direct chat lookup */
+      {
+        $lookup: {
+          from: 'chatparticipants',
+          let: { otherUserId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $in: ['$user', [currentUserObjectId, '$$otherUserId']],
+                },
+              },
+            },
+            {
+              $group: {
+                _id: '$chat',
+                participants: { $addToSet: '$user' },
+              },
+            },
+            {
+              $match: {
+                $expr: {
+                  $eq: [{ $size: '$participants' }, 2], // both users present
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: 'chats',
+                localField: '_id',
+                foreignField: '_id',
+                as: 'chat',
+              },
+            },
+            { $unwind: '$chat' },
+            {
+              $match: {
+                'chat.type': 'direct',
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+              },
+            },
+          ],
+          as: 'directChat',
+        },
+      },
+
+      /* 4️⃣ Compute fields */
       {
         $addFields: {
           isFriend: { $gt: [{ $size: '$friendRelation' }, 0] },
+          directChatId: {
+            $cond: [
+              { $gt: [{ $size: '$directChat' }, 0] },
+              { $arrayElemAt: ['$directChat._id', 0] },
+              null,
+            ],
+          },
           relevance: {
             $switch: {
               branches: [
@@ -128,7 +184,7 @@ export class UsersService {
         },
       },
 
-      // 4️⃣ Sorting
+      /* 5️⃣ Sort */
       {
         $sort: {
           relevance: -1,
@@ -136,12 +192,13 @@ export class UsersService {
         },
       },
 
-      // 5️⃣ Cleanup
+      /* 6️⃣ Cleanup */
       {
         $project: {
           passwordHash: 0,
           relevance: 0,
           friendRelation: 0,
+          directChat: 0,
         },
       },
     ]);

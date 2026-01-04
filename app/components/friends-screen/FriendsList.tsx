@@ -1,4 +1,4 @@
-import { View, Text, FlatList } from "react-native";
+import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import React from "react";
 import getInitials from "@/utils/getInitials";
 import color from "@/styles/color";
@@ -8,7 +8,7 @@ type Props = {};
 
 const FriendsList = (props: Props) => {
   const ctx = useFriendsPageContext();
-  const { friends } = ctx;
+  const { friends, handleMessage, handleStartChat, startChatLoading } = ctx;
   return (
     <View
       style={{
@@ -27,7 +27,7 @@ const FriendsList = (props: Props) => {
               <View
                 style={{
                   flexDirection: "row",
-                  alignItems: "start",
+                  alignItems: "center",
                   backgroundColor: "white",
                   padding: 16,
                 }}
@@ -56,14 +56,47 @@ const FriendsList = (props: Props) => {
                 </View>
 
                 {/* User Details */}
-                <View>
+                <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 16, fontWeight: "500" }}>
                     {item.name}
                   </Text>
-
                   <Text style={{ fontSize: 14, fontWeight: "300" }}>
                     {item.email}
                   </Text>
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <TouchableOpacity
+                    onPress={
+                      typeof item.directChatId === "string"
+                        ? handleMessage(item.directChatId)
+                        : handleStartChat(item._id)
+                    }
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderRadius: 16,
+                      backgroundColor: "#E5E7EB",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "500",
+                      }}
+                    >
+                      {startChatLoading
+                        ? "Loading..."
+                        : typeof item.directChatId === "string"
+                        ? "Message"
+                        : "Start Chat"}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             );

@@ -20,6 +20,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="chats/[chatId]"
+        options={{
+          tabBarStyle: { display: "none" },
+        }}
+      />
+      <Tabs.Screen
         name="friends"
         options={{
           title: "Friends",

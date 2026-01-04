@@ -10,7 +10,6 @@ import {
   Request,
 } from '@nestjs/common';
 import { ChatsService } from './chats.service';
-import { UpdateChatDto } from './dto/update-chat.dto';
 import * as authGuard from 'src/auth/auth.guard';
 import { ChatType } from './schema/chat.schema';
 
@@ -59,16 +58,31 @@ export class ChatsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.chatsService.findOne(+id);
+    return this.chatsService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateChatDto: UpdateChatDto) {
-    return this.chatsService.update(+id);
+  async update(
+    @Param('id') id: string,
+    @Body() body: { name?: string; description?: string },
+  ) {
+    const { name, description } = body;
+
+    if (!name && !description) {
+      return null;
+    }
+
+    const chat = await this.chatsService.findOne(id);
+
+    if (chat?.type === ChatType.DIRECT) {
+      return this.chatsService.updateName(id, name!);
+    } else if (chat?.type === ChatType.GROUP) {
+      return this.chatsService.updateGroupInfo(id, description!, name!);
+    }
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.chatsService.remove(+id);
+    return this.chatsService.remove(id);
   }
 }

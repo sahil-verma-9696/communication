@@ -1,4 +1,4 @@
-import { UserSearchResult } from "@/hooks/use-friendsTab-logic";
+import { Friend, UserSearchResult } from "@/hooks/use-friendsTab-logic";
 import { User } from "@/types/authentication.types";
 import React from "react";
 
@@ -7,14 +7,16 @@ import React from "react";
  * ----------------
  */
 export type FriendsPageContextType = {
-  friends: User[] | null;
+  friends: Friend[] | null;
   searchResults: UserSearchResult[] | null;
   query: string;
-  handleQueryChange: (text: string) => void;
-  handleAddFriendClick: (friendId: string) => () => void;
-  searchUsers: (friendId: string) => () => Promise<void>;
   searchResultsLoading: boolean;
   friendsLoading: boolean;
+  startChatLoading: boolean;
+  handleQueryChange: (text: string) => void;
+  handleAddFriendClick: (friendId: string) => () => void;
+  handleStartChat: (friendId: string) => () => void;
+  handleMessage: (chatId: string) => () => void;
 };
 
 /**

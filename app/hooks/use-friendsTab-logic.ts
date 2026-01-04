@@ -3,21 +3,29 @@ import { useEffect, useState } from "react";
 import { SERVER_BASE_URL } from "./use-authContext-logic";
 import { User } from "@/types/authentication.types";
 import { FriendsPageContextType } from "@/context/friendsPage.context";
+import { router } from "expo-router";
 
 export type UserSearchResult = User & {
   isFriend: boolean;
+  directChatId: string | null;
 };
+
+export type Friend = User & {
+  directChatId: string | null;
+};
+
 export default function useFriendsTabLogic(): FriendsPageContextType {
   /********************************************************
    * ********************** Local States *********************
    *************************************************************/
-  const [friends, setFriends] = useState<User[] | null>(null);
+  const [friends, setFriends] = useState<Friend[] | null>(null);
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<UserSearchResult[] | null>(
     null
   );
   const [friendsLoading, setFriendsLoading] = useState(false);
   const [searchResultsLoading, setSearchResultsLoading] = useState(false);
+  const [startChatLoading, setStartChatLoading] = useState(false);
 
   /********************************************************
    * ********************** Other Hooks *********************
@@ -29,12 +37,56 @@ export default function useFriendsTabLogic(): FriendsPageContextType {
    *************************************************************/
 
   /**
-   * handle friend click
+   * handle message
    * -------------------
-   * @param friendId
-   * @returns
+   *
    */
-  const handleFriendClick = (friendId: string) => () => {};
+  const handleMessage = (chatId: string) => () => {
+    router.push({
+      pathname: "/chats/[chatId]",
+      params: { chatId },
+    });
+  };
+
+  /**
+   * handle start chat
+   * -------------------
+   *
+   */
+  const handleStartChat = (friendId: string) => async () => {
+    try {
+      if (!friendId) {
+        throw new Error("Friend id is required");
+      }
+      setStartChatLoading(true);
+      const res = await fetch(`${SERVER_BASE_URL}/chats`, {
+        method: "POST",
+
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ chatType: "direct", participants: [friendId] }),
+      });
+
+      if (!res.ok) {
+        setStartChatLoading(false);
+        const err = await res.json();
+        throw new Error(err.message);
+      }
+
+      const data = await res.json();
+
+      setStartChatLoading(false);
+      router.push({
+        pathname: "/chats/[chatId]",
+        params: { chatId: data._id },
+      });
+    } catch (error) {
+      setStartChatLoading(false);
+      console.error("Error starting chat:", error);
+    }
+  };
 
   /**
    * handle query change
@@ -118,7 +170,7 @@ export default function useFriendsTabLogic(): FriendsPageContextType {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         const resData = await res.json();
-        console.log(resData, "resData");
+        console.log(resData, "Friends");
         setFriends(resData);
         setFriendsLoading(false);
       } catch (error) {
@@ -132,15 +184,16 @@ export default function useFriendsTabLogic(): FriendsPageContextType {
   /********************************************************
    * ********************** Returns *********************
    *************************************************************/
-
   return {
     friends,
     query,
-    handleQueryChange,
-    handleAddFriendClick,
-    searchUsers,
     searchResults,
     friendsLoading,
     searchResultsLoading,
+    startChatLoading,
+    handleQueryChange,
+    handleAddFriendClick,
+    handleStartChat,
+    handleMessage,
   };
 }

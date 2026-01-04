@@ -9,7 +9,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, usePathname } from "expo-router";
 import React, { useState } from "react";
 
-export const SERVER_BASE_URL = "https://b6a3378045c6.ngrok-free.app"; // change for prod
+export const SERVER_BASE_URL = "https://47c2adad5177.ngrok-free.app"; // change for prod
 // export const SERVER_BASE_URL = "https://communication-ud8n.onrender.com"; // change for prod
 export const useCheckAuthenticity = (): AuthContextType => {
   /********************************************************

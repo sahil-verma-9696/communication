@@ -31,22 +31,75 @@ export class ChatsService {
    * @param participantId
    * @returns Promise<Chat>
    */
-  async createDirectChat(ownerId: string, participantId: string) {
+  async createDirectChat(userId: string, participantId: string) {
+    const userA = new Types.ObjectId(userId);
+    const userB = new Types.ObjectId(participantId);
+
+    /**
+     * 1️⃣ Check if DIRECT chat already exists between both users
+     */
+    const existingChat = await this.chatParticipantModel.aggregate<{
+      _id: Types.ObjectId;
+      count: number;
+      chat: Chat;
+    }>([
+      {
+        $match: {
+          user: { $in: [userA, userB] },
+          isDeleted: false,
+        },
+      },
+      {
+        $group: {
+          _id: '$chat',
+          count: { $sum: 1 },
+        },
+      },
+      { $match: { count: 2 } },
+      {
+        $lookup: {
+          from: 'chats',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'chat',
+        },
+      },
+      { $unwind: '$chat' },
+      {
+        $match: {
+          'chat.type': ChatType.DIRECT,
+          'chat.isDeleted': false,
+        },
+      },
+      { $limit: 1 },
+    ]);
+
+    if (existingChat.length > 0) {
+      return existingChat[0].chat; // ✅ return already existing chat
+    }
+
+    /**
+     * 2️⃣ Create new DIRECT chat
+     */
     const newChat = await this.chatModel.create({
       type: ChatType.DIRECT,
     });
 
-    await this.chatParticipantModel.create({
-      chat: newChat._id,
-      user: new Types.ObjectId(ownerId),
-      role: ChatParticipantRole.OWNER,
-    });
-
-    await this.chatParticipantModel.create({
-      chat: newChat._id,
-      user: new Types.ObjectId(participantId),
-      role: ChatParticipantRole.PARTICIPANT,
-    });
+    /**
+     * 3️⃣ Create participants (bulk insert)
+     */
+    await this.chatParticipantModel.insertMany([
+      {
+        chat: newChat._id,
+        user: userA,
+        role: ChatParticipantRole.PARTICIPANT,
+      },
+      {
+        chat: newChat._id,
+        user: userB,
+        role: ChatParticipantRole.PARTICIPANT,
+      },
+    ]);
 
     return newChat;
   }
@@ -74,7 +127,7 @@ export class ChatsService {
   ) {
     const newChat = await this.chatModel.create({
       type: ChatType.GROUP,
-      name: name || 'There is no name',
+      name: name || 'Un_named',
       description: description || 'There is no description',
     });
 
@@ -111,16 +164,18 @@ export class ChatsService {
    * @returns
    */
   getMyChats(userId: string) {
+    const currentUserId = new Types.ObjectId(userId);
+
     return this.chatParticipantModel.aggregate([
-      // 1️⃣ Only my participation rows
+      /* 1️⃣ My participation */
       {
         $match: {
-          user: new Types.ObjectId(userId),
+          user: currentUserId,
           isDeleted: false,
         },
       },
 
-      // 2️⃣ Join with chats
+      /* 2️⃣ Join chat */
       {
         $lookup: {
           from: 'chats',
@@ -130,17 +185,58 @@ export class ChatsService {
         },
       },
 
-      // 3️⃣ Flatten chat array
+      /* 3️⃣ Flatten */
       { $unwind: '$chat' },
 
-      // 4️⃣ Ignore deleted chats
+      /* 4️⃣ Ignore deleted chats */
       {
         $match: {
           'chat.isDeleted': false,
         },
       },
 
-      // 5️⃣ Shape response
+      /* 5️⃣ 🔥 Lookup other participant (DIRECT only) */
+      {
+        $lookup: {
+          from: 'chatparticipants',
+          let: { chatId: '$chat._id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$chat', '$$chatId'] },
+                    { $ne: ['$user', currentUserId] },
+                    { $eq: ['$isDeleted', false] },
+                  ],
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: 'users',
+                localField: 'user',
+                foreignField: '_id',
+                as: 'user',
+              },
+            },
+            { $unwind: '$user' },
+            {
+              $project: {
+                _id: 0,
+                user: {
+                  _id: '$user._id',
+                  name: '$user.name',
+                  email: '$user.email',
+                },
+              },
+            },
+          ],
+          as: 'directParticipant',
+        },
+      },
+
+      /* 6️⃣ Shape response */
       {
         $project: {
           _id: 0,
@@ -154,10 +250,18 @@ export class ChatsService {
           role: '$role',
           unreadCount: '$unreadCount',
           joinedAt: '$createdAt',
+
+          participant: {
+            $cond: [
+              { $eq: ['$chat.type', 'direct'] },
+              { $arrayElemAt: ['$directParticipant.user', 0] },
+              null,
+            ],
+          },
         },
       },
 
-      // 6️⃣ Optional: latest active chats first
+      /* 7️⃣ Sort */
       {
         $sort: {
           joinedAt: -1,
@@ -170,15 +274,26 @@ export class ChatsService {
     return `This action returns all chats`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} chat`;
+  findOne(id: string) {
+    return this.chatModel.findById(new Types.ObjectId(id));
   }
 
-  update(id: number) {
-    return `This action updates a #${id} chat`;
+  updateName(id: string, name: string) {
+    return this.chatModel.updateOne(
+      { _id: new Types.ObjectId(id) },
+      { name: name },
+    );
   }
 
-  remove(id: number) {
+  updateGroupInfo(id: string, description: string, name: string) {
+    return this.chatModel.updateOne(
+      { _id: new Types.ObjectId(id), type: ChatType.GROUP },
+      { description: description, name: name },
+    );
+  }
+
+  remove(id: string) {
+    this.chatModel.updateOne({ _id: id }, { isDeleted: true });
     return `This action removes a #${id} chat`;
   }
 }

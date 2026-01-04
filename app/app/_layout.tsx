@@ -10,6 +10,10 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="chats" />
+            <Stack.Screen
+              name="chats/[chatId]"
+              options={{ title: "Chat", headerShown: true }}
+            />
             <Stack.Screen name="login" />
           </Stack>
         </GlobalContextProvider>

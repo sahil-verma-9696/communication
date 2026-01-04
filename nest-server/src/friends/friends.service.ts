@@ -24,18 +24,101 @@ export class FriendsService {
   }
 
   async findAll(userId: string) {
-    const objectId = new Types.ObjectId(userId);
+    const currentUserId = new Types.ObjectId(userId);
 
-    const relations = await this.friendModel
-      .find({
-        $or: [{ user: objectId }, { friend: objectId }],
-      })
-      .populate('user friend');
+    return this.friendModel.aggregate([
+      /* 1️⃣ Only relations involving me */
+      {
+        $match: {
+          $or: [{ user: currentUserId }, { friend: currentUserId }],
+        },
+      },
 
-    // Step 2: Normalize result
-    return relations.map((rel) => {
-      return rel.user._id.equals(objectId) ? rel.friend : rel.user;
-    });
+      /* 2️⃣ Normalize friend user */
+      {
+        $addFields: {
+          friendUserId: {
+            $cond: [{ $eq: ['$user', currentUserId] }, '$friend', '$user'],
+          },
+        },
+      },
+
+      /* 3️⃣ Join friend user details */
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'friendUserId',
+          foreignField: '_id',
+          as: 'friend',
+        },
+      },
+      { $unwind: '$friend' },
+
+      /* 4️⃣ 🔥 Lookup direct chat */
+      {
+        $lookup: {
+          from: 'chatparticipants',
+          let: { friendId: '$friend._id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $in: ['$user', [currentUserId, '$$friendId']],
+                },
+              },
+            },
+            {
+              $group: {
+                _id: '$chat',
+                users: { $addToSet: '$user' },
+              },
+            },
+            {
+              $match: {
+                $expr: { $eq: [{ $size: '$users' }, 2] },
+              },
+            },
+            {
+              $lookup: {
+                from: 'chats',
+                localField: '_id',
+                foreignField: '_id',
+                as: 'chat',
+              },
+            },
+            { $unwind: '$chat' },
+            {
+              $match: {
+                'chat.type': 'direct',
+                'chat.isDeleted': false,
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+              },
+            },
+          ],
+          as: 'directChat',
+        },
+      },
+
+      /* 5️⃣ Shape response */
+      {
+        $project: {
+          _id: '$friend._id',
+          name: '$friend.name',
+          email: '$friend.email',
+          directChatId: {
+            $cond: [
+              { $gt: [{ $size: '$directChat' }, 0] },
+              { $arrayElemAt: ['$directChat._id', 0] },
+              null,
+            ],
+          },
+        },
+      },
+    ]);
   }
 
   findOne(id: number) {
