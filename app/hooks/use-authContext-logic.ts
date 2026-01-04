@@ -17,6 +17,7 @@ export const useCheckAuthenticity = (): AuthContextType => {
    *************************************************************/
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   /********************************************************
    * ********************** Reference Variables *********************
@@ -51,6 +52,7 @@ export const useCheckAuthenticity = (): AuthContextType => {
     await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(resData.user));
 
     setLoading(false);
+    setIsLoggedIn(true);
     if (pathname === "/login") router.push("/");
   }
 
@@ -80,6 +82,7 @@ export const useCheckAuthenticity = (): AuthContextType => {
     await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(resData.user));
 
     setLoading(false);
+    setIsLoggedIn(true);
     if (pathname === "/login") router.push("/");
   }
 
@@ -89,6 +92,7 @@ export const useCheckAuthenticity = (): AuthContextType => {
       STORAGE_KEYS.EXPIRES_AT,
       STORAGE_KEYS.USER,
     ]);
+    setIsLoggedIn(false);
     if (pathname !== "/login") router.push("/login");
   }
 
@@ -105,6 +109,7 @@ export const useCheckAuthenticity = (): AuthContextType => {
         if (pathname !== "/login") router.push("/login");
         setLoading(false);
       } else {
+        setIsLoggedIn(true);
         if (pathname === "/login") router.push("/");
         setLoading(false);
       }
@@ -112,6 +117,7 @@ export const useCheckAuthenticity = (): AuthContextType => {
   }, [pathname, setLoading]);
 
   return {
+    isLoggedIn,
     loading,
     logout,
     login,

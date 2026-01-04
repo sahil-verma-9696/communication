@@ -76,6 +76,13 @@ export class FriendRequestsService {
         existingRequest.status = FriendRequestStatus.PENDING;
 
         await existingRequest.save();
+        await this.notificationService.createNotification({
+          userId: friendId,
+          type: NotificationType.FRIEND_REQUEST,
+          title: 'Friend request',
+          message: `You have a new friend request from ${senderName} (${senderEmail})`,
+          triggeredBy: userId,
+        });
         return existingRequest;
       }
     }
@@ -233,7 +240,7 @@ export class FriendRequestsService {
       userId: request.sender.toString(),
       type: NotificationType.FRIEND_REQUEST,
       title: 'Friend request rejected',
-      message: 'Your friend request has been rejected',
+      message: `Your friend request has been rejected by ${userId}`,
       triggeredBy: userId,
     });
 

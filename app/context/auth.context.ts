@@ -5,6 +5,7 @@ import {
 import { createContext, useContext } from "react";
 
 export type AuthContextType = {
+  isLoggedIn: boolean;  
   loading: boolean;
   logout: () => Promise<void>;
   login: (payload: LoginCredentials) => Promise<void>;
