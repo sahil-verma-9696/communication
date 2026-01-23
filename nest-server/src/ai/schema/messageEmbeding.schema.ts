@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 export type MessageEmbeddingDocument = HydratedDocument<MessageEmbedding>;
 
@@ -8,17 +8,17 @@ export class MessageEmbedding {
   @Prop({ type: [Number], required: true })
   embedding: number[];
 
-  @Prop()
-  content: string;
+  @Prop({ type: String, required: true })
+  content: string; // text
 
-  @Prop()
-  chatId: string;
+  @Prop({ type: Types.ObjectId, ref: 'Chat', required: true })
+  chatId: Types.ObjectId;
 
-  @Prop()
-  senderId: string;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  senderId: Types.ObjectId;
 
-  @Prop()
-  messageId: string;
+  @Prop({ type: Types.ObjectId, ref: 'Message', required: true })
+  messageId: Types.ObjectId;
 }
 
 export const MessageEmbeddingSchema =

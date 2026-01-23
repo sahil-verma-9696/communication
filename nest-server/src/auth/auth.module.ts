@@ -6,6 +6,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UsersModule } from 'src/users/users.module';
 import { AuthGuard } from './auth.guard';
+import { GoogleStrategy } from './google.strategy';
 
 @Global()
 @Module({
@@ -26,7 +27,7 @@ import { AuthGuard } from './auth.guard';
     UsersModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, AuthGuard],
+  providers: [AuthService, AuthGuard, GoogleStrategy],
   exports: [JwtModule, AuthGuard],
 })
 export class AuthModule {}

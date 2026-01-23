@@ -17,4 +17,4 @@ async function bootstrap() {
   app.use(morgan('combined'));
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+bootstrap().catch(console.error);

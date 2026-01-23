@@ -19,6 +19,12 @@ export class User {
 
   @Prop({ required: true, select: false })
   passwordHash: string;
+
+  @Prop({ default: false })
+  verified_email: boolean;
+
+  @Prop({ type: String, default: null })
+  avatar: string | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -39,4 +39,13 @@ export class SocketService {
       this.server.to(socketId).emit(events.NOTIFICATION, payload);
     }
   }
+
+  // TODO : create room
+  sendMessage(chatId: string, senderId: string, payload: any) {
+    const senderSockets = this.onlineUsers.get(senderId);
+    if (!senderSockets || !this.server) return;
+    for (const socketId of senderSockets) {
+      this.server.to(chatId).except(socketId).emit(events.MESSAGE, payload);
+    }
+  }
 }

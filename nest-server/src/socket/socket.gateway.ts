@@ -1,8 +1,11 @@
 import {
+  ConnectedSocket,
+  MessageBody,
   // ConnectedSocket,
   // MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  SubscribeMessage,
   // SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -12,6 +15,7 @@ import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { UnauthorizedException } from '@nestjs/common';
 import { JwtPayload } from 'src/auth/auth.guard';
+import events from './constants/events';
 // import events from './constants/events';
 
 @WebSocketGateway({
@@ -67,5 +71,23 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleDisconnect(client: Socket) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     console.log('User disconnected:', client.data?.user?.sub);
+  }
+
+  @SubscribeMessage(events.JOIN_CHAT)
+  handleJoinChat(
+    @MessageBody() chatId: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.join(chatId); // 🔥 THIS IS THE ROOM JOIN
+    console.log(`User ${client.data.user.sub} joined chat room ${chatId}`);
+  }
+
+  @SubscribeMessage(events.LEAVE_CHAT)
+  handleLeaveChat(
+    @MessageBody() chatId: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.leave(chatId); // 🔥 THIS IS THE ROOM LEAVE
+    console.log(`User ${client.data.user.sub} left chat room ${chatId}`);
   }
 }

@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { Credentails } from './dto/credentails.dto';
 import { UsersService } from 'src/users/users.service';
@@ -14,34 +18,71 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
   async register(user: CreateUserDto): Promise<AuthResponse> {
-    const newUser = await this.usersService.create(user);
+    /**
+     * Validation : check if user already exists
+     * ------------------------------------------
+     */
 
-    if (!newUser) {
-      throw new Error('User creation failed');
+    const existingUser = await this.usersService.getUserByEmail(user.email);
+
+    if (existingUser) {
+      throw new ConflictException('User already exists');
     }
 
+    /**
+     * Create user
+     * ------------
+     */
+    const newUser = await this.usersService.create(user);
+
+    /**
+     * Validate : user creation
+     * ------------
+     */
+    if (!newUser) {
+      throw new InternalServerErrorException('User creation failed');
+    }
+
+    /**
+     * Prepare token payload
+     * --------------
+     */
     const payload = {
       sub: newUser._id.toString(),
       username: newUser.name,
       email: user.email,
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    /**
+     * Create token
+     * ------------
+     */
     const access_token = await this.jwtService.signAsync(payload);
 
+    /**
+     * Validate : token creation
+     * ------------
+     */
     if (!access_token) {
-      throw new Error('Token creation failed');
+      throw new InternalServerErrorException('Token creation failed');
     }
 
+    /**
+     * Prepare response
+     * ----------------
+     */
     const expiresInMs = jwtExpiresInToMs('7d');
 
     const response: AuthResponse = {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       token: access_token,
       user: newUser,
       expiresIn: String(expiresInMs),
     };
 
+    /**
+     * Return response
+     * ---------------
+     */
     return response;
   }
 
@@ -67,7 +108,6 @@ export class AuthService {
       email: user.email,
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const access_token = await this.jwtService.signAsync(payload);
 
     if (!access_token) {
@@ -77,7 +117,6 @@ export class AuthService {
     const expiresInMs = jwtExpiresInToMs('7d');
 
     return {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       token: access_token,
       user,
       expiresIn: String(expiresInMs),

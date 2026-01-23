@@ -1,4 +1,6 @@
 import { useAuthContext } from "@/context/auth.context";
+import { SERVER_BASE_URL } from "@/hooks/use-authContext-logic";
+import { useGoogleAuth } from "@/hooks/use-googleAuth";
 import React, { useState } from "react";
 import { Button, Text, TextInput, View } from "react-native";
 
@@ -15,6 +17,7 @@ export default function Index() {
       alert(err.message || "Registration failed");
     }
   };
+
   return (
     <View style={{ padding: 32 }}>
       <Text>Login Screen</Text>
