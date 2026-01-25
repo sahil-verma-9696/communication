@@ -1,27 +1,30 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument } from './schema/users.schema';
+import { User, UserDocument, UserWithoutPassword } from './schema/users.schema';
 import { Model, Types } from 'mongoose';
 
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
-  async create(createUserDto: CreateUserDto) {
-    const payload: User = {
-      passwordHash: createUserDto.password,
-      ...createUserDto,
+  /**
+   * Create User
+   * --------------
+   *
+   * @description Create user if not then return null.
+   * @param { User } payload
+   * @returns
+   */
+  async create(payload: User): Promise<UserWithoutPassword | null> {
+    const user = await this.userModel.create(payload);
+
+    return {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+      verified_email: user.verified_email,
     };
-    const newUser = await this.userModel.create(payload);
-
-    if (!newUser) {
-      throw new NotFoundException('User not found');
-    }
-
-    const user = await this.findOne(newUser._id.toString());
-
-    return user;
   }
 
   findAll() {
@@ -217,14 +220,11 @@ export class UsersService {
     return isMatch;
   }
 
-  async getUserByEmail(email: string): Promise<UserDocument> {
+  async getUserByEmail(email: string): Promise<UserDocument | null> {
     const user = await this.userModel
       .findOne({ email })
       .select('-passwordHash');
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
     return user;
   }
 

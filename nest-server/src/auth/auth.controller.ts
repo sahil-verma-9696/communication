@@ -10,10 +10,10 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Credentails } from './dto/credentails.dto';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import * as authGuard from './auth.guard';
 import { GoogleStrategy } from './google.strategy';
 import type { Response } from 'express';
+import { RequestBodyDto } from './dto/request-body';
 
 @Controller('auth')
 export class AuthController {
@@ -32,7 +32,7 @@ export class AuthController {
    * @returns
    */
   @Post('register')
-  registerUser(@Body() user: CreateUserDto) {
+  registerUser(@Body() user: RequestBodyDto) {
     return this.authService.register(user);
   }
 

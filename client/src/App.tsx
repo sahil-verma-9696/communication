@@ -1,8 +1,12 @@
-import React from "react";
+import { Outlet } from "react-router";
+import AuthGaurd from "./providers/auth-gaurd";
 
 export default function App() {
-  const handleClick = async () => {
-    window.location.href = "http://localhost:3000/auth/login?type=google";
-  };
-  return <div onClick={handleClick}>Continue with google</div>;
+  return (
+    <>
+      <AuthGaurd>
+        <Outlet />
+      </AuthGaurd>
+    </>
+  );
 }

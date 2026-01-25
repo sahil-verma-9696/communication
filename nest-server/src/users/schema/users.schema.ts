@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 
 export type UserDocument = HydratedDocument<User, UserMethods>;
-export type UserWithoutPassword = Omit<UserDocument, 'passwordHash'>;
+export type UserWithoutPassword = Omit<User, 'passwordHash'> & {
+  _id: Types.ObjectId;
+};
 export interface UserMethods {
   comparePassword(plainPassword: string): Promise<boolean>;
 }
@@ -20,11 +22,11 @@ export class User {
   @Prop({ required: true, select: false })
   passwordHash: string;
 
-  @Prop({ default: false })
-  verified_email: boolean;
+  @Prop({ type: Boolean, default: false })
+  verified_email?: boolean;
 
   @Prop({ type: String, default: null })
-  avatar: string | null;
+  avatar?: string | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -3,9 +3,14 @@ import { google } from 'googleapis';
 import { UsersService } from 'src/users/users.service';
 import { AuthResponse } from './types';
 import { JwtService } from '@nestjs/jwt';
-import { InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { jwtExpiresInToMs } from 'src/utilities/jwtExpiresToMs';
+import {
+  UserDocument,
+  UserWithoutPassword,
+} from 'src/users/schema/users.schema';
 
+@Injectable()
 export class GoogleStrategy {
   /**
    * To use OAuth2 authentication, we need access to a CLIENT_ID, CLIENT_SECRET, AND REDIRECT_URI.
@@ -60,7 +65,8 @@ export class GoogleStrategy {
       throw new Error('Failed to get user profile from Google');
     }
 
-    let user = await this.userService.getUserByEmail(profile.email);
+    let user: UserWithoutPassword | UserDocument | null =
+      await this.userService.getUserByEmail(profile.email);
 
     if (!user) {
       /**
@@ -71,7 +77,7 @@ export class GoogleStrategy {
         name: profile.name!,
         verified_email: profile.verified_email!,
         avatar: profile.picture!,
-        password: profile.email,
+        passwordHash: profile.email,
       });
     } else {
       /**
@@ -81,6 +87,14 @@ export class GoogleStrategy {
         email: profile.email,
         verified_email: profile.verified_email!,
       });
+    }
+
+    /**
+     * Validate : user creation
+     * ------------
+     */
+    if (!user) {
+      throw new InternalServerErrorException('User creation failed');
     }
 
     /**
@@ -115,7 +129,7 @@ export class GoogleStrategy {
 
     const response: AuthResponse = {
       token: access_token,
-      user,
+      user: user,
       expiresIn: String(expiresInMs),
     };
 

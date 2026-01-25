@@ -18,6 +18,10 @@ import { JwtPayload } from 'src/auth/auth.guard';
 import events from './constants/events';
 // import events from './constants/events';
 
+// type SocketWithData = Socket & {
+//   data: JwtPayload;
+// };
+
 @WebSocketGateway({
   cors: {
     origin: 'http://localhost:5173',
