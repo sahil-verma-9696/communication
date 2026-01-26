@@ -1,4 +1,5 @@
 import { SERVER_URL } from "@/app.constatns";
+import { apiFetch } from "@/utils/api-fetch";
 
 export type User = {
   avatar: string | null;
@@ -31,26 +32,9 @@ export interface AuthResponse {
 export default async function login({
   payload,
 }: LoginParams): Promise<AuthResponse> {
-  try {
-    const res = await fetch(`${SERVER_URL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.message ?? "Invalid credentials");
-    }
-
-    return data;
-  } catch (error) {
-    // 🚨 Network / CORS / Server down
-    if (error instanceof TypeError) {
-      throw new Error("Unable to connect to server. Server is Down.");
-    }
-
-    throw error;
-  }
+  return apiFetch<AuthResponse, LoginParams["payload"]>({
+    url: `${SERVER_URL}/auth/login`,
+    method: "POST",
+    body: payload,
+  });
 }

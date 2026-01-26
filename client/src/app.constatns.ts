@@ -1,6 +1,6 @@
 import type { User } from "./services/login";
 
-export const APP_NAME = "Chat App";
+export const APP_NAME = "Communication";
 
 export const PROTECTED_ROUTES = ["home", "profile"];
 

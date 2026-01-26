@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Friend, FriendDocument } from './schema/friends.schema';
 import { Model, Types } from 'mongoose';
+import { FriendListItem } from './types';
 
 @Injectable()
 export class FriendsService {
@@ -23,7 +24,7 @@ export class FriendsService {
     return friend;
   }
 
-  async findAll(userId: string) {
+  async findAll(userId: string): Promise<FriendListItem[]> {
     const currentUserId = new Types.ObjectId(userId);
 
     return this.friendModel.aggregate([

@@ -17,12 +17,12 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import logout from "@/services/logout";
-import { usePageContext } from "@/pages/home/_context";
 import type { User } from "@/services/login";
+import { useGlobalContext } from "@/contexts/global.context";
 
 export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar();
-  const ctx = usePageContext();
+  const ctx = useGlobalContext();
   return (
     <SidebarMenu>
       <SidebarMenuItem>
