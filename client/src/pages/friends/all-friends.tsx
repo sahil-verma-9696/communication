@@ -58,7 +58,7 @@ export default function Page() {
           <div className="flex-1">
             <p className="text-sm font-medium">{friend.name}</p>
             {friend.email && (
-              <p className="text-xs text-muted-foreground">@{friend.name}</p>
+              <p className="text-xs text-muted-foreground">{friend.email}</p>
             )}
           </div>
         </div>

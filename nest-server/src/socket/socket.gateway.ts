@@ -36,6 +36,7 @@ import events from './constants/events';
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
+
   constructor(
     private readonly socketService: SocketService,
     private jwtService: JwtService,
@@ -64,6 +65,8 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.data.user = payload; // attach user to socket
 
       this.socketService.addOnlineUser(payload.sub, client.id);
+
+      this.socketService.brodcastOnlineUsers();
 
       console.log('User connected:', payload.username, payload.email);
     } catch (err) {

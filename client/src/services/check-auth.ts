@@ -10,6 +10,7 @@ export default function checkAuth(
   const expiresAt = localSpace.getExpiresAt();
   const isValid = validateToken({ token, expiresAt });
 
+
   if (isValid) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsAuthenticated(true);

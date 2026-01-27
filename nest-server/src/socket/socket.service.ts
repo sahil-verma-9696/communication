@@ -20,6 +20,11 @@ export class SocketService {
     this.onlineUsers.get(userId)!.add(socketId);
   }
 
+  brodcastOnlineUsers() {
+    if (!this.server) return;
+    this.server.emit(events.ONLINE_USERS, Array.from(this.onlineUsers.keys()));
+  }
+
   removeOnlineUser(userId: string, socketId: string) {
     const sockets = this.onlineUsers.get(userId);
     if (!sockets) return;

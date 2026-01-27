@@ -11,11 +11,11 @@ export default function Page() {
         <TabsList>
           {ctx.friendChilds.map((child) => {
             return (
-              <TabsTrigger value={child} key={child}>
-                <Link to={child.toLocaleLowerCase()}>
+              <Link key={child} to={child.toLocaleLowerCase()}>
+                <TabsTrigger value={child}>
                   {strCaptalize(seprateBySpaces(child))}
-                </Link>
-              </TabsTrigger>
+                </TabsTrigger>
+              </Link>
             );
           })}
         </TabsList>
@@ -23,5 +23,5 @@ export default function Page() {
 
       <Outlet />
     </div>
-  )
+  );
 }

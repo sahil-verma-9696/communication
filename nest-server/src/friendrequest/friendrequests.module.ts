@@ -8,6 +8,8 @@ import { FriendRequestController } from '../friendrequest/friendrequests.control
 import { FriendRequestsService } from '../friendrequest/friendrequests.service';
 import { FriendsModule } from 'src/friends/friends.module';
 import { NotificationModule } from 'src/notification/notification.module';
+import { FriendRequestListener } from './friend-request.listener';
+import { SocketModule } from 'src/socket/socket.module';
 
 @Module({
   imports: [
@@ -16,8 +18,9 @@ import { NotificationModule } from 'src/notification/notification.module';
     ]),
     FriendsModule,
     NotificationModule,
+    SocketModule,
   ],
   controllers: [FriendRequestController],
-  providers: [FriendRequestsService],
+  providers: [FriendRequestsService, FriendRequestListener],
 })
 export class FriendRequestsModule {}

@@ -83,7 +83,7 @@ export default function useMain() {
           setLoading(false);
 
           // 🚀 navigate only AFTER success
-          navigate("/home", { replace: true });
+          navigate("/me/home", { replace: true });
         } catch (error) {
           console.log(error);
           setError((error as Error).message);

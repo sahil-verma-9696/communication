@@ -1,10 +1,17 @@
+import { useSocketContext } from "@/contexts/socket.context";
 import useAsyncState from "@/hooks/use-async-state";
 import getFriends, { type FriendListResponse } from "@/services/get-freinds";
+import { SOCKET_EVENTS } from "@/socket.events.constants";
 import { getFriendChildrenRoutes } from "@/utils/getRoutes";
 import React from "react";
 import { useLocation, useNavigate } from "react-router";
 
 export default function useMain() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const { data, setData } = useAsyncState();
+  const { socket } = useSocketContext();
 
   const [activeTab, setActiveTab] = React.useState<string>("all");
 
@@ -17,10 +24,13 @@ export default function useMain() {
     setLoading: setLoadingAllFriends,
   } = useAsyncState<FriendListResponse[]>();
 
-  const location = useLocation();
-  const navigate = useNavigate();
-
   const friendChilds = getFriendChildrenRoutes();
+
+  const handleValueChange = (value: string) => navigate(value);
+
+  const handleOnlineUsers = (onlineUsers: string[]) => {
+    console.log("ONLINE_USERS", onlineUsers);
+  };
 
   React.useEffect(() => {
     const path = location.pathname.split("/").filter(Boolean).at(-1) ?? "all";
@@ -33,7 +43,7 @@ export default function useMain() {
       try {
         setLoadingAllFriends(true);
         const friends = await getFriends();
-        console.log(friends)
+        console.log(friends);
 
         setAllFriends(friends);
 
@@ -47,7 +57,18 @@ export default function useMain() {
     })();
   }, []);
 
-  const handleValueChange = (value: string) => navigate(value);
+  // GET ONLINE FRIENDS
+  React.useEffect(() => {
+    if (socket) {
+      socket.on(SOCKET_EVENTS.ONLINE_USERS, handleOnlineUsers);
+    }
+
+    return () => {
+      if (socket) {
+        socket.off(SOCKET_EVENTS.ONLINE_USERS, handleOnlineUsers);
+      }
+    };
+  }, [socket]);
 
   return {
     friendChilds,

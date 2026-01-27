@@ -11,6 +11,7 @@ import {
   OnlineFriends,
   PendingFriends,
 } from "./pages/friends";
+import PrivateLayout from "./private.layout";
 
 export const friendChilds: RouteObject[] = [
   {
@@ -22,7 +23,7 @@ export const friendChilds: RouteObject[] = [
     element: <AllFriends />,
   },
   {
-    path: "online",
+    path: "online", 
     element: <OnlineFriends />,
   },
   {
@@ -35,19 +36,27 @@ export const friendChilds: RouteObject[] = [
   },
 ];
 
+export const protectedChilds: RouteObject[] = [
+  {
+    path: "home",
+    element: <HomePage />,
+  },
+  {
+    path: "friends",
+    element: <FriendsPage />,
+    children: friendChilds,
+  },
+];
+
 const appChilds: RouteObject[] = [
   {
     index: true,
     element: <LandingPage />,
   },
   {
-    path: "/home",
-    element: <HomePage />,
-  },
-  {
-    path: "/friends",
-    element: <FriendsPage />,
-    children: friendChilds,
+    path: "/me",
+    element: <PrivateLayout/>,
+    children: protectedChilds,
   },
   {
     path: "/login",

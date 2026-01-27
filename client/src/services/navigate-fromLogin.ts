@@ -7,6 +7,6 @@ import { PROTECTED_ROUTES, PUBLIC_ROUTES } from "@/app.constatns";
 export default function navigateFromLogin(): void {
   const currentLocation = window.location.href.split("/").pop() || "/";
   if (PUBLIC_ROUTES.includes(currentLocation)) {
-    window.location.href = `/${PROTECTED_ROUTES[0]}`;
+    window.location.href = `/me/${PROTECTED_ROUTES[0]}`;
   }
 }
