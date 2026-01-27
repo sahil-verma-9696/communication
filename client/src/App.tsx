@@ -5,11 +5,11 @@ import GlobalContextProvider from "./providers/global";
 export default function App() {
   return (
     <>
-      <GlobalContextProvider>
-        <AuthGaurd>
+      <AuthGaurd>
+        <GlobalContextProvider>
           <Outlet />
-        </AuthGaurd>
-      </GlobalContextProvider>
+        </GlobalContextProvider>
+      </AuthGaurd>
     </>
   );
 }
