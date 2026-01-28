@@ -4,6 +4,8 @@ import { useAuthContext } from "@/contexts/auth.contex";
 import type { SocketContextType } from "@/contexts/socket.context";
 import localSpace from "@/services/local-space";
 import { SERVER_URL } from "@/app.constatns";
+import getBrowserInfo from "@/services/get-browserInfo";
+import getDeviceId from "@/services/get-deviceId";
 
 export default function useSocket(): SocketContextType {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -30,7 +32,11 @@ export default function useSocket(): SocketContextType {
       if (prev) return prev;
 
       const newSocket = io(SERVER_URL, {
-        auth: { token: accessToken },
+        auth: {
+          token: accessToken,
+          deviceId: getDeviceId(),
+          browserInfo: getBrowserInfo(),
+        },
       });
 
       return newSocket;
