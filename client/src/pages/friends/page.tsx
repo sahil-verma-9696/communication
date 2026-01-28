@@ -16,12 +16,12 @@ export default function Page() {
                   {strCaptalize(seprateBySpaces(child))}
                 </TabsTrigger>
               </Link>
-            );
+            )
           })}
         </TabsList>
       </Tabs>
 
       <Outlet />
     </div>
-  );
+  )
 }

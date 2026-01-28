@@ -5,6 +5,7 @@ export interface FriendListItem {
   name: string;
   email: string;
   directChatId: Types.ObjectId | null;
+  avatar?: string | null;
 }
 export interface FriendListResponse {
   _id: string;

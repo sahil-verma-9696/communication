@@ -1,9 +1,11 @@
+import { cn } from "@/lib/utils";
 import { usePageContext } from "./_context";
 import { Loader2, AlertCircle, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export default function Page() {
   const ctx = usePageContext();
-  const { allFriends, allFriendsError, loadingAllFriends } = ctx;
+  const { allFriendsWithStatus, allFriendsError, loadingAllFriends } = ctx;
 
   // 1️⃣ Loading state
   if (loadingAllFriends) {
@@ -29,7 +31,7 @@ export default function Page() {
   }
 
   // 3️⃣ Empty state
-  if (!allFriends || allFriends.length === 0) {
+  if (!allFriendsWithStatus || allFriendsWithStatus.length === 0) {
     return (
       <div className="flex h-64 flex-col items-center justify-center text-center">
         <Users className="h-8 w-8 text-muted-foreground" />
@@ -43,26 +45,56 @@ export default function Page() {
 
   // 4️⃣ Success state
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {allFriends.map((friend) => (
-        <div
-          key={friend._id}
-          className="flex items-center gap-3 rounded-lg border p-4"
-        >
-          {/* <img
-            src={friend.avatar ?? "/avatar-placeholder.png"}
-            alt={friend.name}
-            className="h-10 w-10 rounded-full object-cover"
-          /> */}
+    <div className="pt-4 space-y-2">
+      <div className="space-y-2 pt-4">
+        {allFriendsWithStatus.map((friend) => {
+          const isOnline = friend.online;
 
-          <div className="flex-1">
-            <p className="text-sm font-medium">{friend.name}</p>
-            {friend.email && (
-              <p className="text-xs text-muted-foreground">{friend.email}</p>
-            )}
-          </div>
-        </div>
-      ))}
+          return (
+            <div
+              key={friend._id}
+              className={cn(
+                "flex items-center gap-3 rounded-lg border p-4 transition",
+                isOnline
+                  ? "bg-background opacity-100"
+                  : "bg-muted/40 opacity-60",
+              )}
+            >
+              {/* Avatar placeholder */}
+              <div
+                className={cn(
+                  "h-10 w-10 rounded-full flex items-center justify-center text-xs font-semibold",
+                  isOnline
+                    ? "bg-green-500/10 text-green-600"
+                    : "bg-gray-300 text-gray-600",
+                )}
+              >
+                {friend.name.charAt(0).toUpperCase()}
+              </div>
+
+              <div className="flex-1">
+                <p className="text-sm font-medium">{friend.name}</p>
+                {friend.email && (
+                  <p className="text-xs text-muted-foreground">
+                    {friend.email}
+                  </p>
+                )}
+              </div>
+
+              {/* Status badge */}
+              <Badge
+                variant={isOnline ? "default" : "secondary"}
+                className={cn(
+                  "text-xs",
+                  isOnline && "bg-green-600 hover:bg-green-600",
+                )}
+              >
+                {isOnline ? "Online" : "Offline"}
+              </Badge>
+            </div>
+          );
+        })}
+      </div>
     </div>
-  )
+  );
 }

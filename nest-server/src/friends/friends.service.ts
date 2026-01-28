@@ -110,6 +110,7 @@ export class FriendsService {
           _id: '$friend._id',
           name: '$friend.name',
           email: '$friend.email',
+          avatar: '$friend.avatar',
           directChatId: {
             $cond: [
               { $gt: [{ $size: '$directChat' }, 0] },

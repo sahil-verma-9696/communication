@@ -1,17 +1,17 @@
-import { useSocketContext } from "@/contexts/socket.context";
+import { useAppContext } from "@/contexts/app.context";
 import useAsyncState from "@/hooks/use-async-state";
 import getFriends, { type FriendListResponse } from "@/services/get-freinds";
-import { SOCKET_EVENTS } from "@/socket.events.constants";
 import { getFriendChildrenRoutes } from "@/utils/getRoutes";
 import React from "react";
 import { useLocation, useNavigate } from "react-router";
 
 export default function useMain() {
+  const friendChilds = getFriendChildrenRoutes();
+
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { data, setData } = useAsyncState();
-  const { socket } = useSocketContext();
+  const { onlineUsers } = useAppContext();
 
   const [activeTab, setActiveTab] = React.useState<string>("all");
 
@@ -24,14 +24,24 @@ export default function useMain() {
     setLoading: setLoadingAllFriends,
   } = useAsyncState<FriendListResponse[]>();
 
-  const friendChilds = getFriendChildrenRoutes();
+  // MAP friends with online status
+  const allFriendsWithStatus = React.useMemo(() => {
+    return allFriends?.map((friend) => {
+      return {
+        ...friend,
+        online: onlineUsers.some((user) => user.userId === friend._id),
+      };
+    });
+  }, [allFriends, onlineUsers]);
+
+  // FILTER online friends
+  const onlineFriends = React.useMemo(() => {
+    return allFriendsWithStatus?.filter((friend) => friend.online) ?? [];
+  }, [allFriendsWithStatus]);
 
   const handleValueChange = (value: string) => navigate(value);
 
-  const handleOnlineUsers = (onlineUsers: string[]) => {
-    console.log("ONLINE_USERS", onlineUsers);
-  };
-
+  // SET ACTIVE TAB
   React.useEffect(() => {
     const path = location.pathname.split("/").filter(Boolean).at(-1) ?? "all";
     setActiveTab(path);
@@ -57,23 +67,11 @@ export default function useMain() {
     })();
   }, []);
 
-  // GET ONLINE FRIENDS
-  React.useEffect(() => {
-    if (socket) {
-      socket.on(SOCKET_EVENTS.ONLINE_USERS, handleOnlineUsers);
-    }
-
-    return () => {
-      if (socket) {
-        socket.off(SOCKET_EVENTS.ONLINE_USERS, handleOnlineUsers);
-      }
-    };
-  }, [socket]);
-
   return {
     friendChilds,
     activeTab,
-    allFriends,
+    allFriendsWithStatus,
+    onlineFriends,
     allFriendsError,
     loadingAllFriends,
     handleValueChange,
