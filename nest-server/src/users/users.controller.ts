@@ -30,7 +30,7 @@ export class UsersController {
       return this.usersService.searchUsers(q, userId);
     }
 
-    return this.usersService.findAll();
+    return this.usersService.getAllUsers();
   }
 
   @Get(':id')
@@ -45,6 +45,6 @@ export class UsersController {
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.usersService.remove(id);
+    return 'it will be removed';
   }
 }

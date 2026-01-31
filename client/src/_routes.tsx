@@ -1,5 +1,4 @@
 import { createBrowserRouter, Navigate, type RouteObject } from "react-router";
-import SignUp from "@/pages/signup/page";
 import { HomePage } from "./pages/home";
 import { LandingPage } from "./pages/landing";
 import App from "./App";
@@ -12,6 +11,7 @@ import {
   PendingFriends,
 } from "./pages/friends";
 import PrivateLayout from "./private.layout";
+import { SignupPage } from "./pages/signup";
 
 export const friendChilds: RouteObject[] = [
   {
@@ -64,7 +64,7 @@ const appChilds: RouteObject[] = [
   },
   {
     path: "/signup",
-    element: <SignUp />,
+    element: <SignupPage />,
   },
 ];
 

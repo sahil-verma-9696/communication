@@ -1,16 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import * as bcrypt from 'bcryptjs';
 
-export type UserDocument = HydratedDocument<User, UserMethods>;
-export type UserWithoutPassword = Omit<User, 'passwordHash'> & {
-  _id: Types.ObjectId;
-};
-export interface UserMethods {
-  comparePassword(plainPassword: string): Promise<boolean>;
-}
-
+export type UserDocument = HydratedDocument<User>;
+export type UserJSON = User & { _id: Types.ObjectId; __v: number };
 @Schema({ timestamps: true })
 export class User {
   @Prop({ required: true })
@@ -19,35 +11,29 @@ export class User {
   @Prop({ required: true, unique: true, lowercase: true })
   email: string;
 
-  @Prop({ required: true, select: false })
-  passwordHash: string;
-
-  @Prop({ type: Boolean, default: false })
-  verified_email?: boolean;
-
   @Prop({ type: String, default: null })
-  avatar?: string | null;
+  avatar: string | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
 /**
- * 🔒 Pre-save hook for hashing password
+ * unique : true means.
+ *
+ * - email & name must be unique
+ *
+ * i.e.
+ *
+ * {
+ *  name : "abc",
+ *  email : "123",
+ * }
+ *
+ * {
+ *  name : "abc",
+ *  email : "123",
+ * }
+ *
+ * will throw error
  */
-UserSchema.pre<UserDocument>('save', async function () {
-  if (!this.isModified('passwordHash')) return;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-  this.passwordHash = await bcrypt.hash(this.passwordHash, 10);
-});
-
-/**
- * 🔐 Instance method for password comparison
- */
-UserSchema.methods.comparePassword = function (
-  this: UserDocument,
-  plainPassword: string,
-): Promise<boolean> {
-  return bcrypt.compare(plainPassword, this.passwordHash);
-};
-
 UserSchema.index({ email: 1, name: 1 }, { unique: true });

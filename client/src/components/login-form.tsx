@@ -67,7 +67,7 @@ export function LoginForm({
                   type="button"
                   onClick={ctx.handleLoginWithGoogle}
                 >
-                  Login with Google
+                  Continue with Google
                 </Button>
                 <FieldDescription className="text-center">
                   Don&apos;t have an account? <Link to="/signup">Sign up</Link>

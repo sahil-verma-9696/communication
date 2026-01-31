@@ -1,4 +1,12 @@
-import type { User } from "./login";
+import type { User } from "./auth";
+import { jwtDecode } from "jwt-decode";
+
+export type JwtPayload = {
+  exp: number;
+  iat: number;
+  sub: string;
+  email?: string;
+};
 
 class LocalSpace {
   getAccessToken(): string | null {
@@ -23,8 +31,9 @@ class LocalSpace {
     window.dispatchEvent(new Event("auth-change"));
   }
 
-  setExpiresAt(expiresIn: string): void {
-    const expiresAt = Date.now() + Number(expiresIn) * 1000;
+  setExpiresAt(token: string): void {
+    const { exp } = jwtDecode<JwtPayload>(token);
+    const expiresAt = Number(exp) * 1000;
     localStorage.setItem("expiresAt", String(expiresAt));
     window.dispatchEvent(new Event("auth-change"));
   }

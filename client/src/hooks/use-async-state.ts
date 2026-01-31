@@ -8,7 +8,7 @@ type State<T> = {
 type Action<T> =
   | { type: "LOADING"; payload: boolean }
   | { type: "SUCCESS"; payload: T }
-  | { type: "ERROR"; payload: string }
+  | { type: "ERROR"; payload: string | null }
   | { type: "RESET" };
 
 function asyncReducer<T>(state: State<T>, action: Action<T>): State<T> {
@@ -59,7 +59,7 @@ export default function useAsyncState<T>() {
 
   const setData = (data: T) => dispatch({ type: "SUCCESS", payload: data });
 
-  const setError = (error: string) =>
+  const setError = (error: string | null) =>
     dispatch({ type: "ERROR", payload: error });
 
   const reset = () => dispatch({ type: "RESET" });

@@ -1,10 +1,7 @@
 import localSpace from "@/services/local-space";
-import  { login, type AuthResponse } from "@/services/auth";
-import loginWithGoogle from "@/services/login-with-google";
-import getCodeFromUrl from "@/services/get-code-from-url";
-import React, { useEffect } from "react";
+import { register, type AuthResponse } from "@/services/auth";
+import React from "react";
 import { useNavigate } from "react-router";
-import { SERVER_URL } from "@/app.constatns";
 
 export default function useMain() {
   const navigate = useNavigate();
@@ -30,9 +27,10 @@ export default function useMain() {
     setLoading(true);
 
     try {
-      const res = await login({
+      const res = await register({
         payload: {
           email: formData.email as string,
+          name: formData.name as string,
           password: formData.password as string,
         },
       });
@@ -56,47 +54,8 @@ export default function useMain() {
     }
   }
 
-  /**
-   * Handle login with google
-   * -------------------------
-   */
-  function handleLoginWithGoogle() {
-    window.open(`${SERVER_URL}/auth/login?type=google`, "_self");
-  }
-
-  useEffect(() => {
-    const code = getCodeFromUrl(window.location.search);
-
-    if (code) {
-      (async function () {
-        try {
-          const res = await loginWithGoogle(code);
-
-          localSpace.setUser(res.user);
-          localSpace.setAccessToken(res.token);
-          localSpace.setExpiresAt(res.token);
-
-          setResponse(res);
-          setError(null);
-          setLoading(false);
-
-          // 🚀 navigate only AFTER success
-          navigate("/me/home", { replace: true });
-        } catch (error) {
-          console.log(error);
-          setError((error as Error).message);
-          setLoading(false);
-        } finally {
-          setLoading(false);
-        }
-      })();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [window.location.search]);
-
   return {
     handleSubmit,
-    handleLoginWithGoogle,
     loading,
     error,
     response,

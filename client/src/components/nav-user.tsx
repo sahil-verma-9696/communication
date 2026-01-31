@@ -22,7 +22,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import logout from "@/services/logout";
-import type { User } from "@/services/login";
+import type { User } from "@/services/auth";
 import { useGlobalContext } from "@/contexts/global.context";
 
 export function NavUser({ user }: { user: User }) {
@@ -38,13 +38,8 @@ export function NavUser({ user }: { user: User }) {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar>
-                <AvatarImage
-                  src={user.avatar!}
-                  alt={user.name}
-                />
-                <AvatarFallback >
-                  {ctx.fallbackAvtar}
-                </AvatarFallback>
+                <AvatarImage src={user.avatar!} alt={user.name} />
+                <AvatarFallback>{ctx.fallbackAvtar}</AvatarFallback>
                 <AvatarBadge className="bg-green-600 dark:bg-green-800 " />
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">

@@ -1,12 +1,21 @@
+import { SERVER_URL } from "@/app.constatns";
 import { useAppContext } from "@/contexts/app.context";
 import useAsyncState from "@/hooks/use-async-state";
 import getFriends, { type FriendListResponse } from "@/services/get-freinds";
+import localSpace from "@/services/local-space";
+import type { User } from "@/services/auth";
 import { getFriendChildrenRoutes } from "@/utils/getRoutes";
 import React from "react";
 import { useLocation, useNavigate } from "react-router";
 
+export type SearchResult = User & {
+  isFriend: boolean;
+  directChatId: string | null;
+};
+
 export default function useMain() {
   const friendChilds = getFriendChildrenRoutes();
+  const accessToken = localSpace.getAccessToken();
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -14,12 +23,22 @@ export default function useMain() {
   const { onlineUsers } = useAppContext();
 
   const [activeTab, setActiveTab] = React.useState<string>("all");
+  const [query, setQuery] = React.useState<string>("");
+
+  const {
+    data: searchResults,
+    setData: setSearchResults,
+    error: searchResultsError,
+    setError: setSearchResultsError,
+    loading: searchResultsLoading,
+    setLoading: setSearchResultsLoading,
+  } = useAsyncState<SearchResult[]>();
 
   const {
     data: allFriends,
     setData: setAllFriends,
-    setError: setAllFriendsError,
     error: allFriendsError,
+    setError: setAllFriendsError,
     loading: loadingAllFriends,
     setLoading: setLoadingAllFriends,
   } = useAsyncState<FriendListResponse[]>();
@@ -40,6 +59,31 @@ export default function useMain() {
   }, [allFriendsWithStatus]);
 
   const handleValueChange = (value: string) => navigate(value);
+
+  const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.trim();
+    setQuery(e.target.value);
+
+    if (accessToken && value.length > 0) {
+      setSearchResultsLoading(true);
+      (async () => {
+        try {
+          const res = await fetch(`${SERVER_URL}/users?q=${value}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          const data = await res.json();
+
+          setSearchResults(data);
+          setSearchResultsLoading(false);
+        } catch (error) {
+          setSearchResultsError((error as Error).message);
+          setSearchResultsLoading(false);
+        }
+      })();
+    }
+  };
+
+  const handleSelectResult = (result) => {};
 
   // SET ACTIVE TAB
   React.useEffect(() => {
@@ -75,5 +119,10 @@ export default function useMain() {
     allFriendsError,
     loadingAllFriends,
     handleValueChange,
+    searchResults,
+    searchResultsLoading,
+    query,
+    handleQueryChange,
+    handleSelectResult,
   };
 }

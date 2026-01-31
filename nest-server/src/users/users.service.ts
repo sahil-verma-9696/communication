@@ -1,47 +1,77 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument, UserWithoutPassword } from './schema/users.schema';
+import { User, UserDocument } from './schema/users.schema';
 import { Model, Types } from 'mongoose';
+import { RegisterUserDto } from './dto/register-user';
+import { UsersRepo } from './repos/users.repo';
+import { AccountRepo } from './repos/account.repo';
+import { AccountLifecycleRepo } from './repos/account_lifecycle.repo';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
-  /**
-   * Create User
-   * --------------
-   *
-   * @description Create user if not then return null.
-   * @param { User } payload
-   * @returns
-   */
-  async create(payload: User): Promise<UserWithoutPassword | null> {
-    const user = await this.userModel.create(payload);
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private usersRepo: UsersRepo,
+    private accountsRepo: AccountRepo,
+    private accountLifecycleRepo: AccountLifecycleRepo,
+  ) {}
+
+  async registerNewUser(user: RegisterUserDto) {
+    const { name, email, password, avatar, isEmailVerified } = user;
+
+    const newUser = await this.usersRepo.createUser({ name, email, avatar });
+
+    if (!newUser) return null;
+
+    const account = (
+      await this.accountsRepo.create({
+        user: newUser._id,
+        passwordHash: password,
+        isEmailVerified: !!isEmailVerified,
+      })
+    ).toJSON();
+
+    if (!account) return null;
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwordHash, ...restAccount } = account;
+
+    const accountLifecycle = !isEmailVerified
+      ? await this.accountLifecycleRepo.create({ account: account._id })
+      : null;
 
     return {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      avatar: user.avatar,
-      verified_email: user.verified_email,
+      userId: newUser._id,
+      userAccountId: account._id,
+      user: newUser.toJSON(),
+      account: restAccount,
+      accountLifecycle,
     };
   }
 
-  findAll() {
-    return this.userModel.find();
+  async getUserProfile(userId: string | Types.ObjectId) {
+    const user = await this.usersRepo.findUserById(userId);
+
+    if (!user) return null;
+
+    const userAccount = await this.accountsRepo.findByUserId(userId);
+
+    if (!userAccount) return null;
+
+    const accountLifecycle = !userAccount.isEmailVerified
+      ? await this.accountLifecycleRepo.findByAccountId(userAccount._id)
+      : null;
+
+    return {
+      user,
+      account: userAccount,
+      accountLifecycle,
+    };
   }
 
-  async findOne(id: string) {
-    const ObjectId = new Types.ObjectId(id);
-    const user = await this.userModel
-      .findById(ObjectId)
-      .select('-passwordHash');
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    return user;
+  findOne(id: string) {
+    return this.usersRepo.findUserById(id);
   }
 
   /**
@@ -207,27 +237,6 @@ export class UsersService {
     ]);
   }
 
-  async verfiyPassword(id: string, password: string) {
-    const ObjectId = new Types.ObjectId(id);
-    const user = await this.userModel
-      .findById(ObjectId)
-      .select('+passwordHash');
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    const isMatch = await user.comparePassword(password);
-
-    return isMatch;
-  }
-
-  async getUserByEmail(email: string): Promise<UserDocument | null> {
-    const user = await this.userModel
-      .findOne({ email })
-      .select('-passwordHash');
-
-    return user;
-  }
-
   async update(id: string, updateUserDto: UpdateUserDto) {
     const ObjectId = new Types.ObjectId(id);
     const user = await this.userModel
@@ -241,8 +250,7 @@ export class UsersService {
     return user;
   }
 
-  remove(id: string) {
-    const ObjectId = new Types.ObjectId(id);
-    return this.userModel.findByIdAndDelete(ObjectId);
+  getAllUsers() {
+    return this.usersRepo.findAllUsers();
   }
 }

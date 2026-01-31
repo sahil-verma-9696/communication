@@ -22,18 +22,39 @@ export type LoginParams = {
 export interface AuthResponse {
   token: string;
   user: User;
-  expiresIn: string; // in miliseconds
 }
 
 /**
  * login user
  * -----------
  */
-export default async function login({
+export async function login({
   payload,
 }: LoginParams): Promise<AuthResponse> {
   return apiFetch<AuthResponse, LoginParams["payload"]>({
     url: `${SERVER_URL}/auth/login`,
+    method: "POST",
+    body: payload,
+  });
+}
+
+export type RegisterParams = {
+  payload: {
+    name: string;
+    email: string;
+    password: string;
+  };
+};
+
+/**
+ * Register user
+ * -----------
+ */
+export async function register({
+  payload,
+}: RegisterParams): Promise<AuthResponse> {
+  return apiFetch<AuthResponse, RegisterParams["payload"]>({
+    url: `${SERVER_URL}/auth/register`,
     method: "POST",
     body: payload,
   });

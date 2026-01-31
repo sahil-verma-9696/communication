@@ -1,14 +1,14 @@
 import { Response } from 'express';
 import { google } from 'googleapis';
-import { UsersService } from 'src/users/users.service';
-import { AuthResponse } from './types';
-import { JwtService } from '@nestjs/jwt';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { jwtExpiresInToMs } from 'src/utilities/jwtExpiresToMs';
-import {
-  UserDocument,
-  UserWithoutPassword,
-} from 'src/users/schema/users.schema';
+import { UsersRepo } from 'src/users/repos/users.repo';
+
+export type GoogleUserInfo = {
+  name: string;
+  email: string;
+  verified_email: boolean;
+  picture?: string;
+};
 
 @Injectable()
 export class GoogleStrategy {
@@ -27,18 +27,19 @@ export class GoogleStrategy {
     'https://www.googleapis.com/auth/userinfo.profile',
   ];
 
-  constructor(
-    private readonly userService: UsersService,
-    private readonly jwtService: JwtService,
-  ) {}
+  constructor(private readonly userRepo: UsersRepo) {}
 
   /**
    * Validate User
    * --------------
-   * @description This function is used to validate user.
-   * @returns { void }
+   * @description
+   * - This function is used to validate `User` based on `auth code`.
+   *
+   * - If `oauth provider` not give `access_token` for user(means user not registered). Then create user and return `access_token` and `refresh_token`.
+   *
+   * - If oauth provider give `access_token` for user(means user already registered). Then return `access_token` and `refresh_token`.
    */
-  async validate({ auth_code }: { auth_code: string }): Promise<AuthResponse> {
+  async validate(auth_code: string): Promise<GoogleUserInfo> {
     if (!auth_code) {
       throw new Error('Auth code is required');
     }
@@ -47,7 +48,9 @@ export class GoogleStrategy {
     const { tokens } = await this.oauth2Client.getToken(auth_code);
 
     if (!tokens.access_token) {
-      throw new Error('Failed to get access token from Google');
+      throw new InternalServerErrorException(
+        'Failed to get access token from Google',
+      );
     }
 
     // 2. Attach tokens to client
@@ -61,102 +64,24 @@ export class GoogleStrategy {
 
     const { data: profile } = await oauth2.userinfo.v2.me.get();
 
-    if (!profile || !profile.email) {
-      throw new Error('Failed to get user profile from Google');
-    }
+    if (!profile || !profile.email || !profile.name || !profile.verified_email)
+      throw new InternalServerErrorException(
+        'Failed to get user profile from Google',
+      );
 
-    let user: UserWithoutPassword | UserDocument | null =
-      await this.userService.getUserByEmail(profile.email);
-
-    if (!user) {
-      /**
-       * If user sign with google for the first time, then create user, password will be email.
-       */
-      user = await this.userService.create({
-        email: profile.email,
-        name: profile.name!,
-        verified_email: profile.verified_email!,
-        avatar: profile.picture!,
-        passwordHash: profile.email,
-      });
-    } else {
-      /**
-       * If user already exists, then update user, verified email will be updated.
-       */
-      await this.userService.update(user._id.toString(), {
-        email: profile.email,
-        verified_email: profile.verified_email!,
-      });
-    }
-
-    /**
-     * Validate : user creation
-     * ------------
-     */
-    if (!user) {
-      throw new InternalServerErrorException('User creation failed');
-    }
-
-    /**
-     * Prepare token payload
-     * --------------
-     */
-    const payload = {
-      sub: user._id.toString(),
-      username: user.name,
-      email: user.email,
+    return {
+      name: profile.name,
+      email: profile.email,
+      verified_email: profile.verified_email,
+      picture: profile.picture!,
     };
-
-    /**
-     * Create token
-     * ------------
-     */
-    const access_token = await this.jwtService.signAsync(payload);
-
-    /**
-     * Validate : token creation
-     * ------------
-     */
-    if (!access_token) {
-      throw new InternalServerErrorException('Token creation failed');
-    }
-
-    /**
-     * Prepare response
-     * ----------------
-     */
-    const expiresInMs = jwtExpiresInToMs('7d');
-
-    const response: AuthResponse = {
-      token: access_token,
-      user: user,
-      expiresIn: String(expiresInMs),
-    };
-
-    /**
-     * Return response
-     * ---------------
-     */
-    return response;
-  }
-
-  async googleMobileLogin(idToken: string) {
-    const ticket = await this.oauth2Client.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload();
-
-    console.log(JSON.stringify(payload, null, 4));
   }
 
   /**
    * Get Consent of User
    * -------------------
-   * @description This function will redirect user to google consent screen.
-   * @param { Response } res
-   * @returns { void }
+   * @description
+   * This function redirect to google_consent_page and then redirect to same clients route with `auth code`.
    */
   getConsent(res: Response) {
     const authorizationUrl = this.oauth2Client.generateAuthUrl({
@@ -173,5 +98,20 @@ export class GoogleStrategy {
     });
 
     res.redirect(authorizationUrl);
+  }
+
+  /**
+   * Google Mobile Login
+   * @deprecated currently Oauth for mobile not supported.
+   */
+  async googleMobileLogin(idToken: string) {
+    const ticket = await this.oauth2Client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    console.log(JSON.stringify(payload, null, 4));
   }
 }

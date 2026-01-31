@@ -14,6 +14,7 @@ import * as authGuard from './auth.guard';
 import { GoogleStrategy } from './google.strategy';
 import type { Response } from 'express';
 import { RequestBodyDto } from './dto/request-body';
+import { GoogleLoginDto } from './dto/googleLogin.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -27,9 +28,6 @@ export class AuthController {
    * ------------------
    *
    * @description Register a new user
-   *
-   * @param user
-   * @returns
    */
   @Post('register')
   registerUser(@Body() user: RequestBodyDto) {
@@ -39,8 +37,6 @@ export class AuthController {
   /**
    * POST : Local User Login
    * ---------------
-   * @param credentials
-   * @returns
    */
   @Post('login')
   loginUser(@Body() credentials: Credentails) {
@@ -50,9 +46,7 @@ export class AuthController {
   /**
    * GET : OAuth Logins
    * -------------------
-   * @param res
-   * @param {{ code: string }} query
-   * @returns
+
    */
   @Get('login')
   handleGoogleLogin(@Res() res: Response) {
@@ -60,10 +54,8 @@ export class AuthController {
   }
 
   @Get('google/oauth2callback')
-  handleGoogleRedirect(@Query() query: { code: string }) {
-    return this.googleStrategy.validate({
-      auth_code: query.code,
-    });
+  handleGoogleRedirect(@Query() query: GoogleLoginDto) {
+    return this.authService.googleLogin(query.code);
   }
 
   // ---------- NEW (mobile) ----------

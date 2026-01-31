@@ -45,8 +45,8 @@ export default function Page() {
 
   // 4️⃣ Success state
   return (
-    <div className="pt-4 space-y-2">
-      <div className="space-y-2 pt-4">
+    <div className="pt-4">
+      <div className="space-y-2">
         {allFriendsWithStatus.map((friend) => {
           const isOnline = friend.online;
 

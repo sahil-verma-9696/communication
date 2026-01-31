@@ -1,4 +1,4 @@
-import type { User } from "./services/login";
+import type { User } from "./services/auth";
 
 export const APP_NAME = "Communication";
 

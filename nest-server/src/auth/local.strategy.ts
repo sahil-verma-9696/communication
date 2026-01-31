@@ -1,34 +1,39 @@
 import { Injectable } from '@nestjs/common';
-import { AuthStrategy } from './types/strategy.interface';
-import { UsersService } from 'src/users/users.service';
+import { UsersRepo } from 'src/users/repos/users.repo';
+import { AccountRepo } from 'src/users/repos/account.repo';
+import { UserDocument } from 'src/users/schema/users.schema';
+import { AccountDocument } from 'src/users/schema/account.schema';
 
 @Injectable()
-export class LocalStrategy implements AuthStrategy {
-  constructor(private readonly usersService: UsersService) {}
+export class LocalStrategy {
+  constructor(
+    private readonly usersRepo: UsersRepo,
+    private readonly accountsRepo: AccountRepo,
+  ) {}
 
   /**
    * local validation
    * ------------------
-   * @param username
-   * @param password
-   * @returns { boolean | Promise<boolean> }
+   * @description
+   * - It is used to validate `User` based on `email` and `password`.
+   * - after validation it return `user` or `null`.
    */
-  async validate(email: string, password: string): Promise<boolean> {
-    // Input Validation
-    if (!email || !password) return false;
+  async validate(
+    email: string,
+    password: string,
+  ): Promise<{ user: UserDocument; account: AccountDocument } | null> {
+    if (!email || !password) return null;
 
-    // local state
-    let isValid = false;
+    const user = await this.usersRepo.findUserByEmail(email);
 
-    const user = await this.usersService.getUserByEmail(email);
+    if (!user) return null;
 
-    if (!user) return false;
+    const account = await this.accountsRepo.findByUserId(user._id);
 
-    isValid = await this.usersService.verfiyPassword(
-      user._id.toString(),
-      password,
-    );
+    if (!account) return null;
 
-    return isValid;
+    if (!(await account.verifyPassword(password))) return null;
+
+    return { user, account };
   }
 }

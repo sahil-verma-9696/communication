@@ -1,130 +1,124 @@
 import {
-  ConflictException,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Credentails } from './dto/credentails.dto';
 import { UsersService } from 'src/users/users.service';
 import { AuthResponse } from './types';
 import { JwtService } from '@nestjs/jwt';
-import { jwtExpiresInToMs } from 'src/utilities/jwtExpiresToMs';
 import { JwtPayload } from './auth.guard';
 import { RequestBodyDto } from './dto/request-body';
+import { LocalStrategy } from './local.strategy';
+import { GoogleStrategy } from './google.strategy';
+import { UsersRepo } from 'src/users/repos/users.repo';
+import { AccountRepo } from 'src/users/repos/account.repo';
+import { AccountLifecycleRepo } from 'src/users/repos/account_lifecycle.repo';
+import { toEpoch } from 'src/utilities/toEpoch';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private jwtService: JwtService,
+    private readonly googleStrategy: GoogleStrategy,
+    private readonly localStrategy: LocalStrategy,
+    private readonly usersRepo: UsersRepo,
+    private readonly accountsRepo: AccountRepo,
+    private readonly accountLifecycleRepo: AccountLifecycleRepo,
   ) {}
+
   async register(user: RequestBodyDto): Promise<AuthResponse> {
-    /**
-     * Validation : check if user already exists
-     * ------------------------------------------
-     */
-    const existingUser = await this.usersService.getUserByEmail(user.email);
+    const newUser = await this.usersService.registerNewUser(user);
 
-    if (existingUser) {
-      throw new ConflictException('User already exists');
-    }
-
-    /**
-     * Create user
-     * ------------
-     */
-    const newUser = await this.usersService.create({
-      name: user.name,
-      email: user.email,
-      passwordHash: user.password,
-    });
-
-    /**
-     * Validate : user creation
-     * ------------
-     */
-    if (!newUser) {
+    if (!newUser)
       throw new InternalServerErrorException('User creation failed');
-    }
-
-    /**
-     * Prepare token payload
-     * --------------
-     */
-    const payload = {
-      sub: newUser._id.toString(),
-      username: newUser.name,
-      email: user.email,
-    };
 
     /**
      * Create token
      * ------------
      */
-    const access_token = await this.jwtService.signAsync(payload);
+    const access_token = await this.jwtService.signAsync({
+      sub: newUser.userId,
+      username: newUser.user.name,
+      email: newUser.user.email,
+      isEmailVerified: newUser.account.isEmailVerified,
+      trialEndAt: toEpoch(newUser.accountLifecycle?.trialEndAt),
+      accountDeleteAt: toEpoch(newUser.accountLifecycle?.accountDeletedAt),
+    });
 
-    /**
-     * Validate : token creation
-     * ------------
-     */
-    if (!access_token) {
-      throw new InternalServerErrorException('Token creation failed');
-    }
-
-    /**
-     * Prepare response
-     * ----------------
-     */
-    const expiresInMs = jwtExpiresInToMs('7d');
-
-    const response: AuthResponse = {
+    return {
       token: access_token,
-      user: newUser,
-      expiresIn: String(expiresInMs),
+      user: newUser.user,
     };
-
-    /**
-     * Return response
-     * ---------------
-     */
-    return response;
   }
 
   async login(credentials: Credentails): Promise<AuthResponse> {
-    const user = await this.usersService.getUserByEmail(credentials.email);
+    const { email, password } = credentials;
+    const { user, account } =
+      (await this.localStrategy.validate(email, password)) || {};
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    const isMatch = await this.usersService.verfiyPassword(
-      user._id.toString(),
-      credentials.password,
-    );
-
-    if (!isMatch) {
+    if (!user || !account) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = {
+    const accountLifecycle = await this.accountLifecycleRepo.findByAccountId(
+      account._id,
+    );
+
+    const access_token = await this.jwtService.signAsync({
       sub: user._id.toString(),
       username: user.name,
       email: user.email,
-    };
-
-    const access_token = await this.jwtService.signAsync(payload);
-
-    if (!access_token) {
-      throw new InternalServerErrorException('Token creation failed');
-    }
-
-    const expiresInMs = jwtExpiresInToMs('7d');
+      isEmailVerified: account.isEmailVerified,
+      trialEndAt: toEpoch(accountLifecycle?.trialEndAt),
+      accountDeleteAt: toEpoch(accountLifecycle?.accountDeletedAt),
+    });
 
     return {
       token: access_token,
       user,
-      expiresIn: String(expiresInMs),
+    };
+  }
+
+  async googleLogin(code: string): Promise<AuthResponse> {
+    // 1. Get Google user info
+    const googleUser = await this.googleStrategy.validate(code);
+    // assume this returns GoogleUserInfo only
+
+    // 2. Check if user already exists
+    const user = await this.usersRepo.findUserByEmail(googleUser.email);
+
+    // 3. Register if new user
+    if (!user) {
+      return await this.register({
+        name: googleUser.name,
+        email: googleUser.email,
+        password: googleUser.email,
+        isEmailVerified: googleUser.verified_email,
+        avatar: googleUser.picture,
+      });
+    }
+
+    const account = await this.accountsRepo.findByUserId(user?._id);
+
+    const accountLifecycle = account
+      ? await this.accountLifecycleRepo.findByAccountId(account._id)
+      : null;
+
+    // 4. Create JWT
+    const accessToken = await this.jwtService.signAsync({
+      sub: user?._id.toString(),
+      name: user.name,
+      email: user.email,
+      isEmailVerified: account?.isEmailVerified,
+      trialEndAt: toEpoch(accountLifecycle?.trialEndAt),
+      accountDeleteAt: toEpoch(accountLifecycle?.accountDeletedAt),
+    });
+
+    return {
+      token: accessToken,
+      user,
     };
   }
 

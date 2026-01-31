@@ -1,3 +1,5 @@
+import { InternalServerErrorException } from '@nestjs/common';
+
 export function jwtExpiresInToMs(expiresIn: string | number): number {
   if (typeof expiresIn === 'number') {
     // jwt numeric expiresIn is in seconds
@@ -7,7 +9,9 @@ export function jwtExpiresInToMs(expiresIn: string | number): number {
   const match = expiresIn.match(/^(\d+)([smhdw])$/);
 
   if (!match) {
-    throw new Error(`Invalid expiresIn format: ${expiresIn}`);
+    throw new InternalServerErrorException(
+      `Invalid expiresIn format: ${expiresIn}`,
+    );
   }
 
   const value = Number(match[1]);
