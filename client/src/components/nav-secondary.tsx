@@ -18,6 +18,7 @@ export function NavSecondary({
     title: string;
     url: string;
     icon: LucideIcon;
+    targetBlank?: boolean;
   }[];
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   return (
@@ -27,7 +28,7 @@ export function NavSecondary({
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild size="sm">
-                <Link to={item.url}>
+                <Link to={item.url} target={item.targetBlank ? "_blank" : ""}>
                   <item.icon />
                   <span>{item.title}</span>
                 </Link>

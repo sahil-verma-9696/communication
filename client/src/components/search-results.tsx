@@ -10,15 +10,17 @@ import {
 } from "lucide-react";
 
 type SearchResultsProps = {
-  results: SearchResult[];
+  results: SearchResult[] | null;
   loading?: boolean;
   onSelect?: (item: SearchResult) => void;
+  error: string | null;
 };
 
 export function SearchResults({
   results,
   loading = false,
   onSelect,
+  error,
 }: SearchResultsProps) {
   if (loading) {
     return (
@@ -36,6 +38,17 @@ export function SearchResults({
         <CardContent className="flex flex-col items-center gap-2 py-6 text-muted-foreground">
           <Search className="h-5 w-5" />
           <span className="text-sm">No results found</span>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="mt-2">
+        <CardContent className="flex flex-col items-center gap-2 py-6 text-muted-foreground">
+          <Search className="h-5 w-5" />
+          <span className="text-sm">{error || "Something went wrong."}</span>
         </CardContent>
       </Card>
     );

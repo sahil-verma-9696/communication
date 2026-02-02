@@ -3,13 +3,15 @@ import { Input } from "@/components/ui/input";
 import { Field } from "./ui/field";
 import { Button } from "./ui/button";
 import type { User } from "@/services/auth";
+import type { SearchResult } from "@/pages/friends/useMain";
 
 export type SearchProps = {
   query: string;
-  results: User[];
+  results: SearchResult[] | null;
   loading: boolean;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSelect: (user: User) => void;
+  error: string | null;
 };
 export default function Search({
   query,
@@ -17,6 +19,7 @@ export default function Search({
   loading,
   handleInputChange,
   handleSelect,
+  error,
 }: SearchProps) {
   return (
     <div className="relative">
@@ -35,6 +38,7 @@ export default function Search({
           results={results}
           loading={loading}
           onSelect={handleSelect}
+          error={error}
         />
       )}
     </div>

@@ -7,6 +7,7 @@ import {
   Request,
   Query,
   Res,
+  HttpCode,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Credentails } from './dto/credentails.dto';
@@ -39,6 +40,7 @@ export class AuthController {
    * ---------------
    */
   @Post('login')
+  @HttpCode(200)
   loginUser(@Body() credentials: Credentails) {
     return this.authService.login(credentials);
   }

@@ -7,7 +7,6 @@ export type User = {
   email: string;
   name: string;
   updatedAt: string;
-  verified_email: boolean;
   __v: number;
   _id: string;
 };

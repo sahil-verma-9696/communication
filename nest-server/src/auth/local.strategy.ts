@@ -28,7 +28,7 @@ export class LocalStrategy {
 
     if (!user) return null;
 
-    const account = await this.accountsRepo.findByUserId(user._id);
+    const account = await this.accountsRepo.findByUserIdWithPassword(user._id);
 
     if (!account) return null;
 

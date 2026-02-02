@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Command, LifeBuoy, Send } from "lucide-react";
+import { CircleUser, Command, LifeBuoy, Send } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavSecondary } from "@/components/nav-secondary";
@@ -23,6 +23,12 @@ const data = {
   navMain: [],
   navSecondary: [
     {
+      title: "Profile",
+      url: "/me/profile",
+      icon: CircleUser,
+    },
+
+    {
       title: "Friends",
       url: "/me/friends",
       icon: Command,
@@ -31,11 +37,13 @@ const data = {
       title: "Support",
       url: "https://github.com/sahil-verma-9696/communication/issues",
       icon: LifeBuoy,
+      targetBlank: true,
     },
     {
       title: "Feedback",
       url: "https://github.com/sahil-verma-9696/communication/issues",
       icon: Send,
+      targetBlank: true,
     },
   ],
 };

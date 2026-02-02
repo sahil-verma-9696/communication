@@ -33,6 +33,11 @@ export class UsersController {
     return this.usersService.getAllUsers();
   }
 
+  @Get('all')
+  findAllUsers() {
+    return this.usersService.getAllUsers();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
@@ -46,5 +51,10 @@ export class UsersController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return 'it will be removed';
+  }
+
+  @Get(':id/profile')
+  getProfile(@Param('id') id: string) {
+    return this.usersService.getUserProfile(id);
   }
 }

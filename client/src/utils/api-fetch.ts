@@ -1,3 +1,5 @@
+import localSpace from "@/services/local-space";
+
 type ApiFetchOptions<TBody> = {
   url: string;
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";

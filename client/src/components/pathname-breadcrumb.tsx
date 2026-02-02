@@ -21,7 +21,7 @@ export function PathNameBreadcrumb() {
         {/* Home */}
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link to="/home">Root</Link>
+            <Link to="/me/home">Root</Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
 

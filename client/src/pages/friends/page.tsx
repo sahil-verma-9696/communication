@@ -28,6 +28,7 @@ export default function Page() {
         results={ctx.searchResults}
         handleSelect={ctx.handleSelectResult}
         loading={ctx.searchResultsLoading}
+        error={ctx.searchResultsError}
       />
 
       <Outlet />

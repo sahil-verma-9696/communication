@@ -83,7 +83,7 @@ export default function useMain() {
     }
   };
 
-  const handleSelectResult = (result) => {};
+  const handleSelectResult = () => {};
 
   // SET ACTIVE TAB
   React.useEffect(() => {
@@ -120,6 +120,7 @@ export default function useMain() {
     loadingAllFriends,
     handleValueChange,
     searchResults,
+    searchResultsError,
     searchResultsLoading,
     query,
     handleQueryChange,

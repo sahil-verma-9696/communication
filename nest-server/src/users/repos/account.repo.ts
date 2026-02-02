@@ -53,6 +53,15 @@ export class AccountRepo {
    */
   findByUserId(userId: string | Types.ObjectId) {
     return handleMongoDbErrors(() =>
+      this.accountModel.findOne({ user: new Types.ObjectId(userId) }),
+    );
+  }
+
+  /**
+   * Find account by user id
+   */
+  findByUserIdWithPassword(userId: string | Types.ObjectId) {
+    return handleMongoDbErrors(() =>
       this.accountModel
         .findOne({ user: new Types.ObjectId(userId) })
         .select('+passwordHash'),

@@ -20,7 +20,7 @@ import { AiModule } from './ai/ai.module';
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('database.uri'),
+        uri: configService.get<string>('DATABASE_URI'),
       }),
     }),
     UsersModule,
