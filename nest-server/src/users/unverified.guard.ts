@@ -15,6 +15,8 @@ const ALLOWED_UNVERIFIED_ROUTES: Array<{
   { method: 'GET', regex: /^\/users\/profile$/ },
   { method: 'GET', regex: /^\/users\/me$/ },
   { method: 'POST', regex: /^\/auth\/verify-email$/ },
+  { method: 'POST', regex: /^\/auth\/login$/ },
+  { method: 'GET', regex: /^\/auth\/login$/ },
 ];
 
 @Injectable()

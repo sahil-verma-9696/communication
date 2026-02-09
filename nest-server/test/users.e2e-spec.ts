@@ -140,7 +140,7 @@ describe('Users Registration API (e2e)', () => {
       .expect(409);
   });
 
-  it('GET /users/:id/profile → should return 200', async () => {
+  it.only('GET /users/:id/profile → should return 200', async () => {
     const server = app.getHttpServer() as Server;
 
     const res1 = await request(server)

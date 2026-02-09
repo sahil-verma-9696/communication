@@ -11,9 +11,9 @@ import { Types } from 'mongoose';
 import {
   FriendRequest,
   FriendRequestStatus,
-} from './schema/friendrequests.schema';
-import { FriendRequestsService } from './friendrequests.service';
-import { FriendsService } from './../friends/friends.service';
+} from '../schema/friendrequests.schema';
+import { FriendRequestsService } from '../friendrequests.service';
+import { FriendsService } from '../../friends/friends.service';
 
 describe('FriendRequestsService', () => {
   let service: FriendRequestsService;

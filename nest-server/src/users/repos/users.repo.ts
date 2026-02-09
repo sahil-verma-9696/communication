@@ -38,19 +38,25 @@ export class UsersRepo {
     return handleMongoDbErrors(() => this.userModel.findOne({ name }));
   }
 
-  updateUserById(id: string, user: User): Promise<UserDocument | null> {
+  updateUserById(
+    id: string | Types.ObjectId,
+    user: Partial<User>,
+  ): Promise<UserDocument | null> {
     return handleMongoDbErrors(() =>
       this.userModel.findByIdAndUpdate(new Types.ObjectId(id), user),
     );
   }
 
-  deleteUserById(id: string): Promise<UserDocument | null> {
+  deleteUserById(id: string | Types.ObjectId): Promise<UserDocument | null> {
     return handleMongoDbErrors(() =>
       this.userModel.findByIdAndDelete(new Types.ObjectId(id)),
     );
   }
 
-  searchForAUser(q: string, currentUserId: string): Promise<UserDocument[]> {
+  searchForAUser(
+    q: string,
+    currentUserId: string | Types.ObjectId,
+  ): Promise<UserDocument[]> {
     return handleMongoDbErrors(() =>
       this.userModel
         .find({

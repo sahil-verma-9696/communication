@@ -2,12 +2,10 @@ import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
-import jwt from 'jsonwebtoken';
 import { Server } from 'http';
 
 import { AppModule } from '../src/app.module';
 import { AuthResponse } from 'src/auth/types';
-import { JwtPayload } from 'src/auth/auth.guard';
 
 import { getConnectionToken } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
@@ -84,56 +82,51 @@ describe('Users Registration API (e2e)', () => {
     delete process.env.NODE_ENV;
   });
 
-  const mockedPayload = {
-    name: 'Real User',
-    email: 'real@example.com',
+  const mockedPayload1 = {
+    name: 'Test User 1',
+    email: 'user1@example.com',
+    password: 'StrongPassword123',
+  };
+  const mockedPayload2 = {
+    name: 'Test User 2',
+    email: 'user2@example.com',
     password: 'StrongPassword123',
   };
 
   it('POST /auth/register → should create user with valid token', async () => {
     const server = app.getHttpServer() as Server;
 
-    const res = await request(server)
-      .post('/auth/register')
-      .send(mockedPayload)
-      .expect(201);
-
-    const { token, user } = res.body as AuthResponse;
-
-    // 1️⃣ Token exists
-    expect(token).toBeDefined();
-
-    // 2️⃣ JWT structure
-    expect(token.split('.')).toHaveLength(3);
-
-    // 3️⃣ Verify token
-    const decoded = jwt.verify(token, TEST_ENV.JWT_SECRET) as JwtPayload;
-
-    // 4️⃣ Payload validation
-    expect(decoded.sub).toBe(user._id);
-    expect(decoded.email).toBe(mockedPayload.email);
-    expect(decoded.username).toBe(mockedPayload.name);
-
-    // 5️⃣ Expiry validation
-    expect(decoded.exp).toBeGreaterThan(decoded.iat!);
-  });
-
-  it.only('POST /auth/login', async () => {
-    const server = app.getHttpServer() as Server;
-
-    // register
+    // register user 1
     await request(server)
       .post('/auth/register')
-      .send(mockedPayload)
+      .send(mockedPayload1)
       .expect(201);
 
-    // login
-    await request(server)
+    // register user 2
+    const res1 = await request(server)
+      .post('/auth/register')
+      .send(mockedPayload2)
+      .expect(201);
+
+    const { user: user2 } = res1.body as AuthResponse;
+
+    // login user 1
+    const res2 = await request(server)
       .post('/auth/login')
       .send({
-        email: mockedPayload.email,
-        password: mockedPayload.password,
+        email: mockedPayload1.email,
+        password: mockedPayload1.password,
       })
       .expect(200);
+
+    const { token } = res2.body as AuthResponse;
+
+    // create friend request from user 1 to user 2
+    const res3 = await request(server)
+      .post(`/friendrequests?friendId=${user2._id.toString()}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(201);
+
+    console.log(res3.body);
   });
 });

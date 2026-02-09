@@ -27,7 +27,7 @@ export class FriendRequestController {
   @UseGuards(authGuard.AuthGuard)
   @Post()
   create(
-    @Body() body: { friendId: string },
+    @Query() q: { friendId: string },
     @Request() req: authGuard.AuthRequest,
   ) {
     const userId = req.user.sub;
@@ -35,7 +35,7 @@ export class FriendRequestController {
     const userEmail = req.user.email;
     return this.friendrequestService.sendRequest(
       userId,
-      body.friendId,
+      q.friendId,
       username,
       userEmail,
     );

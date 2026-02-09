@@ -8,6 +8,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { UsersRepo } from '../repos/users.repo';
+import { CreateUserDto } from '../dto/create-user';
 
 describe('UsersRepo', () => {
   let service: UsersRepo;
@@ -45,10 +46,10 @@ describe('UsersRepo', () => {
   /**
    * Mock User
    */
-  const mockUser: User = {
+  const mockUser: CreateUserDto = {
     email: 'real@example.com',
     name: 'Real User',
-    avatar: null,
+    avatar: undefined,
   };
 
   /**

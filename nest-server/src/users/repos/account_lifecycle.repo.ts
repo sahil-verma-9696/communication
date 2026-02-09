@@ -39,4 +39,10 @@ export class AccountLifecycleRepo {
       this.accountLifecycleModel.find({}).populate('account'),
     );
   }
+
+  updateById(id: string | Types.ObjectId, update: Partial<AccountLifecycle>) {
+    return handleMongoDbErrors(() =>
+      this.accountLifecycleModel.findByIdAndUpdate(id, update, { new: true }),
+    );
+  }
 }
