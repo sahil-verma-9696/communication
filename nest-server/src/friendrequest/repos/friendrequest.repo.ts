@@ -23,42 +23,23 @@ export class FriendRequestRepo {
     private readonly model: Model<FriendRequestDocument>,
   ) {}
 
-  /* --------------------------------------------------
-   * RAW METHODS (NO POPULATE)
-   * -------------------------------------------------- */
+  /********************************************************************
+   ******************************* CREATE *****************************
+   ********************************************************************/
 
   create(payload: CreateFriendRequest) {
     return handleMongoDbErrors(() => this.model.create(payload));
   }
 
-  updateStatusRaw(id: string | Types.ObjectId, status: FriendRequestStatus) {
-    return handleMongoDbErrors(() =>
-      this.model.findByIdAndUpdate(id, { status }, { new: true }),
-    );
-  }
-
-  deleteById(id: string | Types.ObjectId) {
-    return handleMongoDbErrors(() =>
-      this.model.deleteOne({ _id: new Types.ObjectId(id) }),
-    );
-  }
+  /********************************************************************
+   ******************************* READ *******************************
+   ********************************************************************/
 
   getByIdRaw(id: string | Types.ObjectId) {
-    return this.model.findById(id);
+    return handleMongoDbErrors(() =>
+      this.model.findById(new Types.ObjectId(id)),
+    );
   }
-
-  getBySenderRaw(userId: string | Types.ObjectId) {
-    return this.model.find({ sender: new Types.ObjectId(userId) });
-  }
-
-  getByReceiverRaw(userId: string | Types.ObjectId) {
-    return this.model.find({ receiver: new Types.ObjectId(userId) });
-  }
-
-  /* --------------------------------------------------
-   * POPULATED METHODS (UI / VIEW)
-   * -------------------------------------------------- */
-
   getByIdPopulated(id: string | Types.ObjectId) {
     return handleMongoDbErrors(() =>
       this.model
@@ -69,17 +50,12 @@ export class FriendRequestRepo {
     );
   }
 
-  updateStatusPopulated(
-    id: string | Types.ObjectId,
-    status: FriendRequestStatus,
-  ) {
-    return handleMongoDbErrors(() =>
-      this.model
-        .findByIdAndUpdate(id, { status }, { new: true })
-        .populate('sender')
-        .populate('receiver')
-        .lean<FriendRequestPopulated>(),
-    );
+  getBySenderRaw(userId: string | Types.ObjectId) {
+    return this.model.find({ sender: new Types.ObjectId(userId) });
+  }
+
+  getByReceiverRaw(userId: string | Types.ObjectId) {
+    return this.model.find({ receiver: new Types.ObjectId(userId) });
   }
 
   getByUserPopulated(userId: string | Types.ObjectId) {
@@ -94,10 +70,6 @@ export class FriendRequestRepo {
       .populate('receiver')
       .lean<FriendRequestPopulated[]>();
   }
-
-  /* --------------------------------------------------
-   * AGGREGATE (ADVANCED)
-   * -------------------------------------------------- */
 
   getFriendRequestByUserIdRaw(userId: string | Types.ObjectId) {
     const uid = new Types.ObjectId(userId);
@@ -222,6 +194,38 @@ export class FriendRequestRepo {
           },
         ])
         .then((res) => res[0] ?? { sendTo: [], receiveFrom: [] }),
+    );
+  }
+
+  /********************************************************************
+   ******************************* UPDATE *****************************
+   ********************************************************************/
+
+  updateStatusRaw(id: string | Types.ObjectId, status: FriendRequestStatus) {
+    return handleMongoDbErrors(() =>
+      this.model.findByIdAndUpdate(id, { status }, { new: true }),
+    );
+  }
+  updateStatusPopulated(
+    id: string | Types.ObjectId,
+    status: FriendRequestStatus,
+  ) {
+    return handleMongoDbErrors(() =>
+      this.model
+        .findByIdAndUpdate(id, { status }, { new: true })
+        .populate('sender')
+        .populate('receiver')
+        .lean<FriendRequestPopulated>(),
+    );
+  }
+
+  /********************************************************************
+   ******************************* DELETE *****************************
+   ********************************************************************/
+
+  deleteById(id: string | Types.ObjectId) {
+    return handleMongoDbErrors(() =>
+      this.model.deleteOne({ _id: new Types.ObjectId(id) }),
     );
   }
 }
