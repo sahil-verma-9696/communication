@@ -16,6 +16,7 @@ import {
 import { FriendsService } from './../friends/friends.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { NotificationType } from 'src/notification/schema/notification.schema';
+import { FriendRequestRepo } from './repos/friendrequest.repo';
 
 @Injectable()
 export class FriendRequestsService {
@@ -24,6 +25,7 @@ export class FriendRequestsService {
     private friendRequestModel: Model<FriendRequestDocument>,
     private friendsService: FriendsService,
     private notificationService: NotificationService,
+    private friendRequestRepo: FriendRequestRepo,
   ) {}
 
   /**

@@ -10,6 +10,7 @@ import { FriendsModule } from 'src/friends/friends.module';
 import { NotificationModule } from 'src/notification/notification.module';
 import { FriendRequestListener } from './friend-request.listener';
 import { SocketModule } from 'src/socket/socket.module';
+import { FriendRequestRepo } from './repos/friendrequest.repo';
 
 @Module({
   imports: [
@@ -21,6 +22,6 @@ import { SocketModule } from 'src/socket/socket.module';
     SocketModule,
   ],
   controllers: [FriendRequestController],
-  providers: [FriendRequestsService, FriendRequestListener],
+  providers: [FriendRequestsService, FriendRequestListener, FriendRequestRepo],
 })
 export class FriendRequestsModule {}

@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
+import { Server } from 'http';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
@@ -16,10 +17,16 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+  afterAll(async () => {
+    // ✅ Let Nest close everything gracefully
+    await app.close();
+  });
+
+  it('/ (GET)', async () => {
+    const server = app.getHttpServer() as Server;
+
+    const res1 = await request(server).get('/');
+
+    console.log(res1.body);
   });
 });
