@@ -17,6 +17,8 @@ import { FriendsService } from './../friends/friends.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { NotificationType } from 'src/notification/schema/notification.schema';
 import { FriendRequestRepo } from './repos/friendrequest.repo';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EVENTS } from 'src/common/EVENTS';
 
 @Injectable()
 export class FriendRequestsService {
@@ -26,98 +28,48 @@ export class FriendRequestsService {
     private friendsService: FriendsService,
     private notificationService: NotificationService,
     private friendRequestRepo: FriendRequestRepo,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   /**
-   * ❌ User cannot send request to self
-   * ❌ If PENDING request exists → block
-   * ❌ If ACCEPTED request exists → block (already friends)
-   * ✅ If REJECTED request exists → allow re-send (set back to PENDING)
-   * ✅ If no request exists → create new with PENDING
-   * 🔐 Also prevent reverse pending requests (important)
-   * @param userId
-   * @param friendId
-   * @returns Promise<FriendRequest>
    */
-  async sendRequest(
-    userId: string,
-    friendId: string,
-    senderName?: string,
-    senderEmail?: string,
-  ) {
+  async sendRequest(userId: string, friendId: string) {
     // ❌ Prevent self request
     if (userId === friendId) {
       throw new BadRequestException('Cannot send friend request to yourself');
     }
 
-    const sender = new Types.ObjectId(userId);
-    const receiver = new Types.ObjectId(friendId);
-
     // 🔍 Check if any request exists between users (both directions)
-    const existingRequest = await this.friendRequestModel.findOne({
-      $or: [
-        { sender, receiver },
-        { sender: receiver, receiver: sender },
-      ],
-    });
+    const existingRequest =
+      await this.friendRequestRepo.getFriendRequestBetweenUsersRaw(
+        userId,
+        friendId,
+      );
 
     // ✅ If request exists, handle by status
     if (existingRequest) {
-      // Already friends or pending
-      if (
-        existingRequest.status === FriendRequestStatus.PENDING ||
-        existingRequest.status === FriendRequestStatus.ACCEPTED
-      ) {
-        throw new ConflictException('Friend request already exists');
-      }
-
-      // 🔁 Previously rejected → re-send
-      if (existingRequest.status === FriendRequestStatus.REJECTED) {
-        existingRequest.sender = sender;
-        existingRequest.receiver = receiver;
-        existingRequest.status = FriendRequestStatus.PENDING;
-
-        await existingRequest.save();
-        await this.notificationService.createNotification({
-          userId: friendId,
-          type: NotificationType.FRIEND_REQUEST,
-          title: 'Friend request',
-          message: `You have a new friend request from ${senderName} (${senderEmail})`,
-          triggeredBy: userId,
-        });
-        return existingRequest;
-      }
+      throw new ConflictException('Friend request already exists');
     }
 
     // ✅ No request exists → create new
-    const friendRequest = await this.friendRequestModel.create({
-      sender,
-      receiver,
-      status: FriendRequestStatus.PENDING,
+    const friendRequest = await this.friendRequestRepo.create({
+      sender: userId,
+      receiver: friendId,
     });
 
-    // 🔔 Send notification
-    await this.notificationService.createNotification({
-      userId: friendId,
-      type: NotificationType.FRIEND_REQUEST,
-      title: 'Friend request',
-      message: `You have a new friend request from ${senderName} (${senderEmail})`,
-      triggeredBy: userId,
-    });
+    // Publish event for subscribers
+    this.eventEmitter.emit(EVENTS.FRIEND_REQUEST.CREATED, friendRequest);
 
     return friendRequest;
   }
 
   /**
    * get all friend requests comming to user
-   * @param userId
-   * @returns Promise<FriendRequest[]>
    */
   findAll(userId: string) {
-    return this.friendRequestModel
-      .find({ receiver: new Types.ObjectId(userId) })
-      .populate('sender receiver');
+    return this.friendRequestRepo.getFriendRequestByUserIdPopulated(userId);
   }
+
   async getSentFriendRequests(userId: string) {
     const senderId = new Types.ObjectId(userId);
 
@@ -145,16 +97,13 @@ export class FriendRequestsService {
   }
 
   async findOne(userId: string, requestId: string) {
-    const userObjId = new Types.ObjectId(userId);
-    const requestObjId = new Types.ObjectId(requestId);
-
-    const friendRequest = await this.friendRequestModel.findById(requestObjId);
+    const friendRequest = await this.friendRequestRepo.getByIdRaw(requestId);
 
     if (!friendRequest) {
       throw new NotFoundException('Friend request not found');
     }
 
-    if (friendRequest.receiver.toString() !== userObjId.toString()) {
+    if (friendRequest.receiver.toString() !== userId) {
       throw new ForbiddenException('You are not allowed to view this request');
     }
 

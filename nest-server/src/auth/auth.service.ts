@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { Credentails } from './dto/credentails.dto';
 import { UsersService } from 'src/users/users.service';
-import { AuthResponse } from './types';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from './auth.guard';
 import { RequestBodyDto } from './dto/request-body';
@@ -28,7 +27,7 @@ export class AuthService {
     private readonly accountLifecycleRepo: AccountLifecycleRepo,
   ) {}
 
-  async register(user: RequestBodyDto): Promise<AuthResponse> {
+  async register(user: RequestBodyDto) {
     const newUser = await this.usersService.registerNewUser(user);
 
     if (!newUser)
@@ -53,7 +52,7 @@ export class AuthService {
     };
   }
 
-  async login(credentials: Credentails): Promise<AuthResponse> {
+  async login(credentials: Credentails) {
     const { email, password } = credentials;
     const { user, account } =
       (await this.localStrategy.validate(email, password)) || {};
@@ -81,7 +80,7 @@ export class AuthService {
     };
   }
 
-  async googleLogin(code: string): Promise<AuthResponse> {
+  async googleLogin(code: string) {
     // 1. Get Google user info
     const googleUser = await this.googleStrategy.validate(code);
     // assume this returns GoogleUserInfo only

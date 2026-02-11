@@ -197,6 +197,26 @@ export class FriendRequestRepo {
     );
   }
 
+  getFriendRequestBetweenUsersRaw(
+    user1Id: string | Types.ObjectId,
+    user2Id: string | Types.ObjectId,
+  ) {
+    return handleMongoDbErrors(() =>
+      this.model.findOne({
+        $or: [
+          {
+            sender: new Types.ObjectId(user1Id),
+            receiver: new Types.ObjectId(user2Id),
+          },
+          {
+            sender: new Types.ObjectId(user2Id),
+            receiver: new Types.ObjectId(user1Id),
+          },
+        ],
+      }),
+    );
+  }
+
   /********************************************************************
    ******************************* UPDATE *****************************
    ********************************************************************/

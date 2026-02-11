@@ -31,14 +31,7 @@ export class FriendRequestController {
     @Request() req: authGuard.AuthRequest,
   ) {
     const userId = req.user.sub;
-    const username = req.user.username;
-    const userEmail = req.user.email;
-    return this.friendrequestService.sendRequest(
-      userId,
-      q.friendId,
-      username,
-      userEmail,
-    );
+    return this.friendrequestService.sendRequest(userId, q.friendId);
   }
 
   // TODO : to add flexibile queries

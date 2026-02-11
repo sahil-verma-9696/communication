@@ -1,5 +1,8 @@
 import { Types } from 'mongoose';
-import { FriendRequest } from './schema/friendrequests.schema';
+import {
+  FriendRequest,
+  FriendRequestStatus,
+} from './schema/friendrequests.schema';
 import { UserJSON } from 'src/users/schema/users.schema';
 import { MongoBase } from 'src/types/common';
 
@@ -23,8 +26,11 @@ export type UserFriendRequestPopulated = {
   receiveFrom: Omit<ReceiveFrom, 'from'> & { from: UserJSON }[];
 };
 
-export type CreateFriendRequest = Omit<FriendRequest, 'status'> &
-  Partial<Pick<FriendRequest, 'status'>>;
+export type CreateFriendRequest = {
+  sender: string | Types.ObjectId;
+  receiver: string | Types.ObjectId;
+  status?: FriendRequestStatus;
+};
 
 export type FriendRequestPopulated = Omit<
   FriendRequest,
