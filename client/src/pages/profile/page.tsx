@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Edit3Icon, Mail, MapPin, Trash2Icon } from "lucide-react";
 import { Separator } from "@radix-ui/react-separator";
 import { Badge } from "@/components/ui/badge";
+import getNameAsAvtar from "@/services/getNameAsAvtar";
 
 export default function Page() {
   const { userProfile, userProfileError, userProfileLoading } =
@@ -16,10 +17,13 @@ export default function Page() {
     <div>
       <ScrollArea className="flex-1">
         <div className="p-6 flex flex-col items-center text-center">
-          <Avatar className="size-24 border-4 border-background shadow-xl mb-4">
-            <AvatarImage src={userProfile.user.avatar || ""} />
+          <Avatar className="rounded-full size-24 overflow-hidden">
+            <AvatarImage
+              src={userProfile.user.avatar || ""}
+              alt={userProfile.user.name}
+            />
             <AvatarFallback>
-              {userProfile.user.name.substring(0, 2).toUpperCase()}
+              {getNameAsAvtar(userProfile.user.name)}
             </AvatarFallback>
           </Avatar>
           <h2 className="text-xl font-bold">{userProfile.user.name}</h2>
@@ -59,6 +63,7 @@ export default function Page() {
                   <p className="text-sm text-muted-foreground font-medium leading-none mb-1 space-x-3">
                     <span>Email</span>
                     <Badge
+                      variant={"outline"}
                       className={`${userProfile.account.isEmailVerified ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300" : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"}`}
                     >
                       {userProfile.account.isEmailVerified

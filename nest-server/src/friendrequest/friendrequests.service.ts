@@ -3,7 +3,6 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -15,7 +14,6 @@ import {
 } from './schema/friendrequests.schema';
 import { FriendsService } from './../friends/friends.service';
 import { NotificationService } from 'src/notification/notification.service';
-import { NotificationType } from 'src/notification/schema/notification.schema';
 import { FriendRequestRepo } from './repos/friendrequest.repo';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EVENTS } from 'src/common/EVENTS';
@@ -118,90 +116,23 @@ export class FriendRequestsService {
     return friendRequests;
   }
 
-  async acceptRequest(userId: string, requestId: string) {
-    const request = await this.friendRequestModel.findById(requestId);
-
-    if (!request) {
-      throw new NotFoundException('Friend request not found');
-    }
-
-    // 🔐 Only receiver can accept
-    if (request.receiver.toString() !== userId) {
-      throw new ForbiddenException(
-        'You are not allowed to accept this request',
-      );
-    }
-
-    if (request.status !== FriendRequestStatus.PENDING) {
-      throw new BadRequestException('Friend request already processed');
-    }
-
-    // ✅ Update request status
-    request.status = FriendRequestStatus.ACCEPTED;
-    await request.save();
-
-    // 🔗 Create friendship
-    const friendship = await this.friendsService.create(
-      request.sender.toString(),
-      request.receiver.toString(),
+  async updateRequestStatus(
+    reqId: string,
+    userId: string,
+    status: FriendRequestStatus,
+  ) {
+    const updatedReq = await this.friendRequestRepo.updateStatusByReciverRaw(
+      reqId,
+      userId,
+      status,
     );
 
-    if (!friendship) {
-      throw new InternalServerErrorException('Failed to create friendship');
-    }
+    this.eventEmitter.emit(EVENTS.FRIEND_REQUEST.UPDATED, updatedReq);
 
-    // 🔔 Send notification
-    await this.notificationService.createNotification({
-      userId: request.sender.toString(),
-      type: NotificationType.FRIEND_REQUEST,
-      title: 'Friend request accepted',
-      message: 'Your friend request has been accepted',
-      triggeredBy: userId,
-    });
-
-    return {
-      message: 'Friend request accepted',
-      request,
-    };
+    return updatedReq;
   }
 
-  async rejectRequest(userId: string, requestId: string) {
-    const request = await this.friendRequestModel.findById(requestId);
-
-    if (!request) {
-      throw new NotFoundException('Friend request not found');
-    }
-
-    // 🔐 Only receiver can reject
-    if (request.receiver.toString() !== userId) {
-      throw new ForbiddenException(
-        'You are not allowed to reject this request',
-      );
-    }
-
-    if (request.status !== FriendRequestStatus.PENDING) {
-      throw new BadRequestException('Friend request already processed');
-    }
-
-    request.status = FriendRequestStatus.REJECTED;
-    await request.save();
-
-    // 🔔 Send notification
-    await this.notificationService.createNotification({
-      userId: request.sender.toString(),
-      type: NotificationType.FRIEND_REQUEST,
-      title: 'Friend request rejected',
-      message: `Your friend request has been rejected by ${userId}`,
-      triggeredBy: userId,
-    });
-
-    return {
-      message: 'Friend request rejected',
-      request,
-    };
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} friend`;
+  remove(reqId: string, userId: string) {
+    return this.friendRequestRepo.deleteBySender(reqId, userId);
   }
 }

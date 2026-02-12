@@ -53,8 +53,10 @@ export class UsersController {
     return 'it will be removed';
   }
 
+  @UseGuards(authGuard.AuthGuard)
   @Get(':id/profile')
-  getProfile(@Param('id') id: string) {
-    return this.usersService.getUserProfile(id);
+  getProfile(@Param('id') id: string, @Request() req: authGuard.AuthRequest) {
+    const userId = req.user.sub;
+    return this.usersService.getUserProfile(userId, id);
   }
 }

@@ -11,6 +11,7 @@ import {
   AccountLifecycle,
   AccountLifecycleSchema,
 } from './schema/account_lifecycle.schema';
+import { FriendRequestsModule } from 'src/friendrequest/friendrequests.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import {
     MongooseModule.forFeature([
       { name: AccountLifecycle.name, schema: AccountLifecycleSchema },
     ]),
+    FriendRequestsModule,
   ],
   controllers: [UsersController],
   providers: [UsersService, UsersRepo, AccountRepo, AccountLifecycleRepo],

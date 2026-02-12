@@ -7,9 +7,11 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+
 import { PathNameBreadcrumb } from "./components/pathname-breadcrumb";
 import SocketContextProvider from "./providers/socket";
 import AppDataProvider from "./providers/app-data";
+import { RightSidebar } from "./components/right-sidebar";
 
 export default function PrivateLayout() {
   return (
@@ -35,6 +37,7 @@ export default function PrivateLayout() {
                 <Outlet />
               </div>
             </SidebarInset>
+            <RightSidebar />
           </SidebarProvider>
         </AppDataProvider>
       </SocketContextProvider>

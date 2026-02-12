@@ -7,6 +7,7 @@ import { RegisterUserDto } from './dto/register-user';
 import { UsersRepo } from './repos/users.repo';
 import { AccountRepo } from './repos/account.repo';
 import { AccountLifecycleRepo } from './repos/account_lifecycle.repo';
+import { FriendRequestRepo } from 'src/friendrequest/repos/friendrequest.repo';
 
 @Injectable()
 export class UsersService {
@@ -15,6 +16,7 @@ export class UsersService {
     private usersRepo: UsersRepo,
     private accountsRepo: AccountRepo,
     private accountLifecycleRepo: AccountLifecycleRepo,
+    private friendRequestRepo: FriendRequestRepo,
   ) {}
 
   async registerNewUser(user: RegisterUserDto) {
@@ -50,7 +52,10 @@ export class UsersService {
     };
   }
 
-  async getUserProfile(userId: string | Types.ObjectId) {
+  async getUserProfile(
+    currUserId: string | Types.ObjectId,
+    userId: string | Types.ObjectId,
+  ) {
     const user = await this.usersRepo.findUserById(userId);
 
     if (!user) return null;
@@ -63,10 +68,17 @@ export class UsersService {
       ? await this.accountLifecycleRepo.findByAccountId(userAccount._id)
       : null;
 
+    const friendReq =
+      await this.friendRequestRepo.getFriendRequestBetweenUsersRaw(
+        currUserId,
+        userId,
+      );
+
     return {
       user,
       account: userAccount,
       accountLifecycle,
+      friendRequest: friendReq,
     };
   }
 

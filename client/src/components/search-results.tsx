@@ -1,13 +1,20 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
 import type { SearchResult } from "@/pages/friends/useMain";
 import {
   Loader2,
-  MessageCircle,
-  MessageCirclePlus,
   Search,
-  UserPlus,
 } from "lucide-react";
+import { Avatar } from "./ui/avatar";
+import { AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
+import getNameAsAvtar from "@/services/getNameAsAvtar";
+import { UserProfile } from "./user-profile";
 
 type SearchResultsProps = {
   results: SearchResult[] | null;
@@ -64,15 +71,27 @@ export function SearchResults({
               onClick={() => onSelect?.(item)}
               className="w-full rounded-md p-2 text-left hover:bg-accent focus:bg-accent focus:outline-none flex justify-between"
             >
-              <div>
-                <div className="font-medium">{item.name}</div>
-                <div className="text-sm text-muted-foreground">
-                  {item.email}
-                </div>
-              </div>
               <div className="flex gap-2">
-                {!item.isFriend && <UserPlus />}
-                {item.directChatId ? <MessageCircle /> : <MessageCirclePlus />}
+                <Avatar className="rounded-full size-12 overflow-hidden bg-gray-200 flex justify-center items-center">
+                  <AvatarImage src={item.avatar || ""} alt={item.name} />
+                  <AvatarFallback>{getNameAsAvtar(item.name)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <div className="font-medium cursor-pointer">
+                        {item.name}
+                      </div>
+                    </DialogTrigger>
+                    <DialogContent showCloseButton={false}>
+                      <UserProfile userId={item._id} />
+                    </DialogContent>
+                  </Dialog>
+
+                  <div className="text-sm text-muted-foreground">
+                    {item.email}
+                  </div>
+                </div>
               </div>
             </div>
           ))}

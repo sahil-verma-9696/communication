@@ -23,5 +23,6 @@ import { FriendRequestRepo } from './repos/friendrequest.repo';
   ],
   controllers: [FriendRequestController],
   providers: [FriendRequestsService, FriendRequestListener, FriendRequestRepo],
+  exports: [FriendRequestsService, FriendRequestRepo],
 })
 export class FriendRequestsModule {}

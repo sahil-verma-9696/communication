@@ -1,5 +1,6 @@
 export const EVENTS = {
   FRIEND_REQUEST: {
     CREATED: 'FRIEND_REQUEST_CREATED',
+    UPDATED: 'FRIEND_REQUEST_UPDATED',
   },
 } as const;

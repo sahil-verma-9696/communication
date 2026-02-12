@@ -13,26 +13,31 @@ import {
 } from '@nestjs/common';
 import * as authGuard from 'src/auth/auth.guard';
 import { FriendRequestsService } from './friendrequests.service';
-import { FriendRequestType } from './schema/friendrequests.schema';
-
-export enum FriendRequestAction {
-  ACCEPT = 'accept',
-  REJECT = 'reject',
-}
+import {
+  FriendRequestStatus,
+  FriendRequestType,
+} from './schema/friendrequests.schema';
 
 @Controller('friendrequests')
 export class FriendRequestController {
   constructor(private readonly friendrequestService: FriendRequestsService) {}
 
+  /********************************************************************
+   ******************************* CREATE *****************************
+   ********************************************************************/
   @UseGuards(authGuard.AuthGuard)
   @Post()
   create(
-    @Query() q: { friendId: string },
+    @Query('friendId') friendId: string,
     @Request() req: authGuard.AuthRequest,
   ) {
     const userId = req.user.sub;
-    return this.friendrequestService.sendRequest(userId, q.friendId);
+    return this.friendrequestService.sendRequest(userId, friendId);
   }
+
+  /********************************************************************
+   ******************************* READ *******************************
+   ********************************************************************/
 
   // TODO : to add flexibile queries
   @UseGuards(authGuard.AuthGuard)
@@ -61,40 +66,38 @@ export class FriendRequestController {
     return this.friendrequestService.findOne(userId, requestId);
   }
 
+  /********************************************************************
+   ******************************* UPDATE *****************************
+   ********************************************************************/
+
   @UseGuards(authGuard.AuthGuard)
   @Patch(':id')
   update(
     @Param('id') requestId: string,
-    @Query('action') action: FriendRequestAction,
+    @Query('status') status: FriendRequestStatus,
     @Request() req: authGuard.AuthRequest,
   ) {
     // check if action query param is present
-    if (!action) {
+    if (!status) {
       throw new BadRequestException('Action query param is required');
-    }
-
-    // check if action is valid
-    if (
-      action !== FriendRequestAction.ACCEPT &&
-      action !== FriendRequestAction.REJECT
-    ) {
-      throw new BadRequestException('Invalid action');
     }
     const userId = req.user.sub;
 
-    switch (action) {
-      case FriendRequestAction.ACCEPT:
-        return this.friendrequestService.acceptRequest(userId, requestId);
-      case FriendRequestAction.REJECT:
-        return this.friendrequestService.rejectRequest(userId, requestId);
-      default:
-        throw new BadRequestException('Invalid action');
-    }
+    return this.friendrequestService.updateRequestStatus(
+      requestId,
+      userId,
+      status,
+    );
   }
 
-  // TODO : to implement
+  /********************************************************************
+   ******************************* DELETE *****************************
+   ********************************************************************/
+
+  @UseGuards(authGuard.AuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.friendrequestService.remove(+id);
+  remove(@Param('id') id: string, @Request() req: authGuard.AuthRequest) {
+    const userId = req.user.sub;
+    return this.friendrequestService.remove(id, userId);
   }
 }

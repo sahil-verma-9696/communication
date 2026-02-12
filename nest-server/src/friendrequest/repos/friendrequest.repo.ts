@@ -28,7 +28,13 @@ export class FriendRequestRepo {
    ********************************************************************/
 
   create(payload: CreateFriendRequest) {
-    return handleMongoDbErrors(() => this.model.create(payload));
+    return handleMongoDbErrors(() =>
+      this.model.create({
+        ...payload,
+        sender: new Types.ObjectId(payload.sender),
+        receiver: new Types.ObjectId(payload.receiver),
+      }),
+    );
   }
 
   /********************************************************************
@@ -216,6 +222,28 @@ export class FriendRequestRepo {
       }),
     );
   }
+  getFriendRequestBetweenUsersPopulated(
+    user1Id: string | Types.ObjectId,
+    user2Id: string | Types.ObjectId,
+  ) {
+    return handleMongoDbErrors(() =>
+      this.model
+        .findOne({
+          $or: [
+            {
+              sender: new Types.ObjectId(user1Id),
+              receiver: new Types.ObjectId(user2Id),
+            },
+            {
+              sender: new Types.ObjectId(user2Id),
+              receiver: new Types.ObjectId(user1Id),
+            },
+          ],
+        })
+        .populate('sender receiver')
+        .exec(),
+    );
+  }
 
   /********************************************************************
    ******************************* UPDATE *****************************
@@ -239,6 +267,33 @@ export class FriendRequestRepo {
     );
   }
 
+  updateStatusByReciverRaw(
+    reqId: string | Types.ObjectId,
+    reciverId: string | Types.ObjectId,
+    status: FriendRequestStatus,
+  ) {
+    return handleMongoDbErrors(() =>
+      this.model
+        .findOneAndUpdate(
+          {
+            $and: [
+              {
+                receiver: new Types.ObjectId(reciverId),
+              },
+              {
+                _id: new Types.ObjectId(reqId),
+              },
+            ],
+          },
+          { status },
+          { new: true },
+        )
+        .populate('sender receiver')
+        .lean<FriendRequestPopulated>()
+        .exec(),
+    );
+  }
+
   /********************************************************************
    ******************************* DELETE *****************************
    ********************************************************************/
@@ -246,6 +301,24 @@ export class FriendRequestRepo {
   deleteById(id: string | Types.ObjectId) {
     return handleMongoDbErrors(() =>
       this.model.deleteOne({ _id: new Types.ObjectId(id) }),
+    );
+  }
+
+  deleteBySender(
+    reqId: string | Types.ObjectId,
+    userId: string | Types.ObjectId,
+  ) {
+    return handleMongoDbErrors(() =>
+      this.model.findOneAndDelete({
+        $and: [
+          {
+            sender: new Types.ObjectId(userId),
+          },
+          {
+            _id: new Types.ObjectId(reqId),
+          },
+        ],
+      }),
     );
   }
 }
