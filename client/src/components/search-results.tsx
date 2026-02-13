@@ -1,20 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-
+import { Loader2, Search } from "lucide-react";
+import { UserListItem } from "./user-list-item";
 import type { SearchResult } from "@/pages/friends/useMain";
-import {
-  Loader2,
-  Search,
-} from "lucide-react";
-import { Avatar } from "./ui/avatar";
-import { AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
-import getNameAsAvtar from "@/services/getNameAsAvtar";
-import { UserProfile } from "./user-profile";
 
 type SearchResultsProps = {
   results: SearchResult[] | null;
@@ -26,7 +14,6 @@ type SearchResultsProps = {
 export function SearchResults({
   results,
   loading = false,
-  onSelect,
   error,
 }: SearchResultsProps) {
   if (loading) {
@@ -66,34 +53,7 @@ export function SearchResults({
       <ScrollArea className="h-72">
         <CardContent className="p-1 py-1">
           {results?.map((item) => (
-            <div
-              key={item._id}
-              onClick={() => onSelect?.(item)}
-              className="w-full rounded-md p-2 text-left hover:bg-accent focus:bg-accent focus:outline-none flex justify-between"
-            >
-              <div className="flex gap-2">
-                <Avatar className="rounded-full size-12 overflow-hidden bg-gray-200 flex justify-center items-center">
-                  <AvatarImage src={item.avatar || ""} alt={item.name} />
-                  <AvatarFallback>{getNameAsAvtar(item.name)}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="font-medium cursor-pointer">
-                        {item.name}
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent showCloseButton={false}>
-                      <UserProfile userId={item._id} />
-                    </DialogContent>
-                  </Dialog>
-
-                  <div className="text-sm text-muted-foreground">
-                    {item.email}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <UserListItem user={item} />
           ))}
         </CardContent>
       </ScrollArea>

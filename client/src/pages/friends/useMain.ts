@@ -1,7 +1,5 @@
 import { SERVER_URL } from "@/app.constatns";
-import { useAppContext } from "@/contexts/app.context";
 import useAsyncState from "@/hooks/use-async-state";
-import getFriends, { type FriendListResponse } from "@/services/get-freinds";
 import localSpace from "@/services/local-space";
 import type { User } from "@/services/auth";
 import { getFriendChildrenRoutes } from "@/utils/getRoutes";
@@ -20,8 +18,6 @@ export default function useMain() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { onlineUsers } = useAppContext();
-
   const [activeTab, setActiveTab] = React.useState<string>("all");
   const [query, setQuery] = React.useState<string>("");
 
@@ -33,30 +29,6 @@ export default function useMain() {
     loading: searchResultsLoading,
     setLoading: setSearchResultsLoading,
   } = useAsyncState<SearchResult[]>();
-
-  const {
-    data: allFriends,
-    setData: setAllFriends,
-    error: allFriendsError,
-    setError: setAllFriendsError,
-    loading: loadingAllFriends,
-    setLoading: setLoadingAllFriends,
-  } = useAsyncState<FriendListResponse[]>();
-
-  // MAP friends with online status
-  const allFriendsWithStatus = React.useMemo(() => {
-    return allFriends?.map((friend) => {
-      return {
-        ...friend,
-        online: onlineUsers.some((user) => user.userId === friend._id),
-      };
-    });
-  }, [allFriends, onlineUsers]);
-
-  // FILTER online friends
-  const onlineFriends = React.useMemo(() => {
-    return allFriendsWithStatus?.filter((friend) => friend.online) ?? [];
-  }, [allFriendsWithStatus]);
 
   const handleValueChange = (value: string) => navigate(value);
 
@@ -91,33 +63,9 @@ export default function useMain() {
     setActiveTab(path);
   }, [location.pathname]);
 
-  // GET ALL FRIENDS
-  React.useEffect(() => {
-    (async () => {
-      try {
-        setLoadingAllFriends(true);
-        const friends = await getFriends();
-        console.log(friends);
-
-        setAllFriends(friends);
-
-        setLoadingAllFriends(false);
-      } catch (error) {
-        setAllFriendsError((error as Error).message);
-        setLoadingAllFriends(false);
-      } finally {
-        setLoadingAllFriends(false);
-      }
-    })();
-  }, []);
-
   return {
     friendChilds,
     activeTab,
-    allFriendsWithStatus,
-    onlineFriends,
-    allFriendsError,
-    loadingAllFriends,
     handleValueChange,
     searchResults,
     searchResultsError,

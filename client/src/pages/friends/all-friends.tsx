@@ -1,11 +1,53 @@
 import { cn } from "@/lib/utils";
-import { usePageContext } from "./_context";
 import { Loader2, AlertCircle, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import useAsyncState from "@/hooks/use-async-state";
+import type { FriendListResponse } from "@/services/get-freinds";
+import React from "react";
+import getFriends from "@/services/get-freinds";
+import { useAppContext } from "@/contexts/app.context";
 
 export default function Page() {
-  const ctx = usePageContext();
-  const { allFriendsWithStatus, allFriendsError, loadingAllFriends } = ctx;
+  const { onlineUsers } = useAppContext();
+
+  const {
+    data: allFriends,
+    setData: setAllFriends,
+    error: allFriendsError,
+    setError: setAllFriendsError,
+    loading: loadingAllFriends,
+    setLoading: setLoadingAllFriends,
+  } = useAsyncState<FriendListResponse[]>();
+
+  // MAP friends with online status
+  const allFriendsWithStatus = React.useMemo(() => {
+    return allFriends?.map((friend) => {
+      return {
+        ...friend,
+        online: onlineUsers.some((user) => user.userId === friend._id),
+      };
+    });
+  }, [allFriends, onlineUsers]);
+
+  // GET ALL FRIENDS
+  React.useEffect(() => {
+    (async () => {
+      try {
+        setLoadingAllFriends(true);
+        const friends = await getFriends();
+        console.log(friends);
+
+        setAllFriends(friends);
+
+        setLoadingAllFriends(false);
+      } catch (error) {
+        setAllFriendsError((error as Error).message);
+        setLoadingAllFriends(false);
+      } finally {
+        setLoadingAllFriends(false);
+      }
+    })();
+  }, []);
 
   // 1️⃣ Loading state
   if (loadingAllFriends) {

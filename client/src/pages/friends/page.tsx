@@ -7,7 +7,7 @@ import Search from "@/components/search";
 export default function Page() {
   const ctx = usePageContext();
   return (
-    <div>
+    <div data-slot="page">
       <Tabs defaultValue={ctx.activeTab} className="w-full">
         <TabsList>
           {ctx.friendChilds.map((child) => {
@@ -33,5 +33,5 @@ export default function Page() {
 
       <Outlet />
     </div>
-  );
+  )
 }

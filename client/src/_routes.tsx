@@ -53,7 +53,7 @@ export const protectedChilds: RouteObject[] = [
   },
   {
     path: "profile",
-    element: <ProfilePage />,
+    Component: ProfilePage,
   },
 ];
 

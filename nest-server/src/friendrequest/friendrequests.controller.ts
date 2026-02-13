@@ -13,10 +13,7 @@ import {
 } from '@nestjs/common';
 import * as authGuard from 'src/auth/auth.guard';
 import { FriendRequestsService } from './friendrequests.service';
-import {
-  FriendRequestStatus,
-  FriendRequestType,
-} from './schema/friendrequests.schema';
+import { FriendRequestStatus } from './schema/friendrequests.schema';
 
 @Controller('friendrequests')
 export class FriendRequestController {
@@ -44,16 +41,19 @@ export class FriendRequestController {
   @Get()
   findAll(
     @Request() req: authGuard.AuthRequest,
-    @Query() query: { type: FriendRequestType },
+    @Query() query: { status?: FriendRequestStatus },
   ) {
-    if (query.type === FriendRequestType.RECEIVE) {
-      return this.friendrequestService.getReceivedFriendRequests(req.user.sub);
+    const userId = req.user.sub;
+    // friendrequests?status=FriendRequestStatus :: get all friend requests of user with status
+    if (query.status) {
+      return this.friendrequestService.getUserFriendRequestsByStatus(
+        userId,
+        query.status,
+      );
     }
 
-    if (query.type === FriendRequestType.SEND) {
-      return this.friendrequestService.getSentFriendRequests(req.user.sub);
-    }
-    return this.friendrequestService.findAll(req.user.sub);
+    // friendrequests :: get all friend requests comming to user
+    return this.friendrequestService.getReceivedFriendRequests(userId);
   }
 
   @UseGuards(authGuard.AuthGuard)

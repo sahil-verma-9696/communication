@@ -30,6 +30,9 @@ export class FriendRequestsService {
   ) {}
 
   /**
+   * send friend request
+   * -------------------
+   * - Publish event
    */
   async sendRequest(userId: string, friendId: string) {
     // ❌ Prevent self request
@@ -81,17 +84,12 @@ export class FriendRequestsService {
       .sort({ createdAt: -1 });
   }
 
-  async getReceivedFriendRequests(userId: string) {
-    const receiverId = new Types.ObjectId(userId);
+  getReceivedFriendRequests(userId: string) {
+    return this.friendRequestRepo.getByReceiverPopulated(userId);
+  }
 
-    return this.friendRequestModel
-      .find({
-        receiver: receiverId,
-        status: FriendRequestStatus.PENDING, // optional filter
-      })
-      .populate('sender', '_id name email')
-      .select('_id sender status createdAt')
-      .sort({ createdAt: -1 });
+  getUserFriendRequestsByStatus(userId: string, status: FriendRequestStatus) {
+    return this.friendRequestRepo.getBySenderPopulated(userId, status);
   }
 
   async findOne(userId: string, requestId: string) {
@@ -127,7 +125,12 @@ export class FriendRequestsService {
       status,
     );
 
-    this.eventEmitter.emit(EVENTS.FRIEND_REQUEST.UPDATED, updatedReq);
+    // Publish event for subscribers
+    if (status === FriendRequestStatus.ACCEPTED)
+      this.eventEmitter.emit(EVENTS.FRIEND_REQUEST.ACCEPTED, updatedReq);
+
+    if (status === FriendRequestStatus.REJECTED)
+      this.eventEmitter.emit(EVENTS.FRIEND_REQUEST.REJECTED, updatedReq);
 
     return updatedReq;
   }

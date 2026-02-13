@@ -1,12 +1,10 @@
 import {
   Controller,
   Get,
-  Post,
-  Body,
   Param,
-  Delete,
   UseGuards,
   Request,
+  Patch,
 } from '@nestjs/common';
 import { FriendsService } from './friends.service';
 import * as authGuard from 'src/auth/auth.guard';
@@ -16,36 +14,19 @@ export class FriendsController {
   constructor(private readonly friendsService: FriendsService) {}
 
   @UseGuards(authGuard.AuthGuard)
-  @Post()
-  create(
-    @Request() req: authGuard.AuthRequest,
-    @Body() body: { friendId: string },
-  ) {
+  @Get()
+  getAllUserFriends(@Request() req: authGuard.AuthRequest) {
     const userId = req.user.sub;
-    const friendId = body.friendId;
-
-    return this.friendsService.create(userId, friendId);
+    return this.friendsService.getAllUserFriends(userId);
   }
 
   @UseGuards(authGuard.AuthGuard)
-  @Get()
-  findAll(@Request() req: authGuard.AuthRequest) {
+  @Patch(':id')
+  patchBlockFriendship(
+    @Param('id') id: string,
+    @Request() req: authGuard.AuthRequest,
+  ) {
     const userId = req.user.sub;
-    return this.friendsService.findAll(userId);
-  }
-
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.friendsService.findOne(+id);
-  // }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateFriendDto: UpdateFriendDto) {
-  //   return this.friendsService.update(+id, updateFriendDto);
-  // }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.friendsService.remove(id);
+    return this.friendsService.blockFriendship(id, userId);
   }
 }

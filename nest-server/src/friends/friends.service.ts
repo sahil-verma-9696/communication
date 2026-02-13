@@ -4,30 +4,30 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Friend, FriendDocument } from './schema/friends.schema';
 import { Model, Types } from 'mongoose';
 import { FriendListItem } from './types';
+import { OnEvent } from '@nestjs/event-emitter';
+import { EVENTS } from 'src/common/EVENTS';
+import type { FriendRequestDocument } from 'src/friendrequest/schema/friendrequests.schema';
+import { FriendsRepo } from './repo/friends.repo';
 
 @Injectable()
 export class FriendsService {
   constructor(
     @InjectModel(Friend.name) private friendModel: Model<FriendDocument>,
+    private repo: FriendsRepo,
   ) {}
 
-  async create(userId: string, friendId: string) {
-    const friend = await this.friendModel.create({
-      user: new Types.ObjectId(userId),
-      friend: new Types.ObjectId(friendId),
+  @OnEvent(EVENTS.FRIEND_REQUEST.ACCEPTED, { async: true })
+  private async create(request: FriendRequestDocument) {
+    await this.repo.create({
+      user: request.sender,
+      friend: request.receiver,
     });
-
-    if (!friend) {
-      throw new Error('Failed to create friend');
-    }
-
-    return friend;
   }
 
-  async findAll(userId: string): Promise<FriendListItem[]> {
+  async getAllUserFriends(userId: string) {
     const currentUserId = new Types.ObjectId(userId);
 
-    return this.friendModel.aggregate([
+    return this.friendModel.aggregate<FriendListItem[]>([
       /* 1️⃣ Only relations involving me */
       {
         $match: {
@@ -123,13 +123,9 @@ export class FriendsService {
     ]);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} friend`;
+  blockFriendship(id: string, userId: string) {
+    return this.repo.updateBlockByUserRaw(userId, id, true);
   }
-
-  // update(id: number, updateFriendDto: UpdateFriendDto) {
-  //   return `This action updates a #${id} ${updateFriendDto.toString()} friend`;
-  // }
 
   async remove(id: string) {
     const ObjectId = new Types.ObjectId(id);

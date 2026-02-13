@@ -56,12 +56,40 @@ export class FriendRequestRepo {
     );
   }
 
-  getBySenderRaw(userId: string | Types.ObjectId) {
-    return this.model.find({ sender: new Types.ObjectId(userId) });
+  getBySenderRaw(
+    userId: string | Types.ObjectId,
+    status?: FriendRequestStatus,
+  ) {
+    return handleMongoDbErrors(() =>
+      this.model.find({ sender: new Types.ObjectId(userId), status }).exec(),
+    );
+  }
+  getBySenderPopulated(
+    userId: string | Types.ObjectId,
+    status?: FriendRequestStatus,
+  ) {
+    return handleMongoDbErrors(() =>
+      this.model
+        .find({ sender: new Types.ObjectId(userId), status })
+        .populate('receiver')
+        .exec(),
+    );
   }
 
   getByReceiverRaw(userId: string | Types.ObjectId) {
-    return this.model.find({ receiver: new Types.ObjectId(userId) });
+    return handleMongoDbErrors(() =>
+      this.model
+        .find({ receiver: new Types.ObjectId(userId), status: 'pending' })
+        .exec(),
+    );
+  }
+  getByReceiverPopulated(userId: string | Types.ObjectId) {
+    return handleMongoDbErrors(() =>
+      this.model
+        .find({ receiver: new Types.ObjectId(userId), status: 'pending' })
+        .populate('sender')
+        .exec(),
+    );
   }
 
   getByUserPopulated(userId: string | Types.ObjectId) {
@@ -288,7 +316,6 @@ export class FriendRequestRepo {
           { status },
           { new: true },
         )
-        .populate('sender receiver')
         .lean<FriendRequestPopulated>()
         .exec(),
     );

@@ -1,23 +1,23 @@
-import useAsyncState from "@/hooks/use-async-state";
 import {
   FriendRequestStatus,
   getUserProfile,
   type UserProfileResponse,
 } from "@/services/get-userProfile";
-import React from "react";
 import { DialogHeader } from "./ui/dialog";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { AvatarImage } from "@radix-ui/react-avatar";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import getNameAsAvtar from "@/services/getNameAsAvtar";
 import { Badge } from "./ui/badge";
 import { Calendar, Mail, Shield, UserPlus } from "lucide-react";
 import { formatDate } from "@/utils/formate-string";
 import { Button } from "./ui/button";
 import { postFriendRequest } from "@/services/post-friendrequest";
-import localSpace from "@/services/local-space";
 import { patchFriendRequest } from "@/services/patch-friendrequest";
 import { deleteFriendRequest } from "@/services/delete-friendrequest";
+import localSpace from "@/services/local-space";
+import getNameAsAvtar from "@/services/getNameAsAvtar";
+import useAsyncState from "@/hooks/use-async-state";
+import React from "react";
 
 export function UserProfile({ userId }: { userId: string }) {
   const { data, setData, error, setError, loading, setLoading } =
@@ -29,18 +29,21 @@ export function UserProfile({ userId }: { userId: string }) {
     loading: sendReqLoading,
     setLoading: setSendReqLoading,
   } = useAsyncState();
+
   const {
     // error: acceptResponseError,
     setError: setAcceptResponseError,
     loading: acceptResponseLoading,
     setLoading: setAcceptResponseLoading,
   } = useAsyncState();
+
   const {
     // error: rejectResponseError,
     setError: setRejectResponseError,
     loading: rejectResponseLoading,
     setLoading: setRejectResponseLoading,
   } = useAsyncState();
+
   const {
     // error: cancelReqError,
     setError: setCancelReqError,

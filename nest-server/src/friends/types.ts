@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { Friend } from './schema/friends.schema';
 
 export interface FriendListItem {
   _id: Types.ObjectId;
@@ -13,3 +14,7 @@ export interface FriendListResponse {
   email: string;
   directChatId: string | null;
 }
+
+export type CreateFriend = Omit<Friend, 'isBlocked' | 'blockedBy'> & {
+  isBlocked?: boolean;
+};
