@@ -1,10 +1,10 @@
 import { Loader2, AlertCircle, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import React from "react";
-import getFriends, { type FriendListResponse } from "@/services/get-freinds";
+import getFriends, { type Friend } from "@/services/get-freinds";
 import useAsyncState from "@/hooks/use-async-state";
 import { useAppContext } from "@/contexts/app.context";
+import { UserListItem } from "@/components/user-list-item";
 
 export default function Page() {
   const { onlineUsers } = useAppContext();
@@ -16,13 +16,13 @@ export default function Page() {
     setError: setAllFriendsError,
     loading: loadingAllFriends,
     setLoading: setLoadingAllFriends,
-  } = useAsyncState<FriendListResponse[]>();
+  } = useAsyncState<Friend[]>();
 
   // MAP friends with online status
   const allFriendsWithStatus = React.useMemo(() => {
     return allFriends?.map((friend) => {
       return {
-        ...friend,
+        friend,
         online: onlineUsers.some((user) => user.userId === friend._id),
       };
     });
@@ -92,47 +92,29 @@ export default function Page() {
   // 4️⃣ Success state
   return (
     <div className="space-y-2 pt-4">
-      {onlineFriends.map((friend) => {
-        const isOnline = friend.online;
-
+      {onlineFriends.map(({ friend, online }) => {
         return (
-          <div
+          <UserListItem
             key={friend._id}
-            className={cn(
-              "flex items-center gap-3 rounded-lg border p-4 transition",
-              isOnline ? "bg-background opacity-100" : "bg-muted/40 opacity-60",
-            )}
-          >
-            {/* Avatar placeholder */}
-            <div
-              className={cn(
-                "h-10 w-10 rounded-full flex items-center justify-center text-xs font-semibold",
-                isOnline
-                  ? "bg-green-500/10 text-green-600"
-                  : "bg-gray-300 text-gray-600",
-              )}
-            >
-              {friend.name.charAt(0).toUpperCase()}
-            </div>
-
-            <div className="flex-1">
-              <p className="text-sm font-medium">{friend.name}</p>
-              {friend.email && (
-                <p className="text-xs text-muted-foreground">{friend.email}</p>
-              )}
-            </div>
-
-            {/* Status badge */}
-            <Badge
-              variant={isOnline ? "default" : "secondary"}
-              className={cn(
-                "text-xs",
-                isOnline && "bg-green-600 hover:bg-green-600",
-              )}
-            >
-              {isOnline ? "Online" : "Offline"}
-            </Badge>
-          </div>
+            user={friend.friend}
+            nameBadge={
+              online ? (
+                <Badge
+                  variant="outline"
+                  className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                >
+                  Online
+                </Badge>
+              ) : (
+                <Badge
+                  variant="outline"
+                  className="bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+                >
+                  Offline
+                </Badge>
+              )
+            }
+          />
         );
       })}
     </div>

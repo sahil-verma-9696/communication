@@ -3,29 +3,33 @@ import { Document, Types } from 'mongoose';
 
 export type ChatDocument = Chat & Document;
 
-export enum ChatType {
+export enum CHAT_TYPE {
   DIRECT = 'direct',
   GROUP = 'group',
 }
 
 @Schema({ timestamps: true })
 export class Chat {
-  @Prop({ enum: ChatType, required: true })
-  type: ChatType;
+  @Prop({ enum: CHAT_TYPE, required: true })
+  type: CHAT_TYPE;
 
-  // For group chat
-  @Prop()
-  name?: string;
+  @Prop({ type: String, default: null })
+  name: string | null;
 
-  @Prop()
-  description?: string;
+  @Prop({ type: String, default: null })
+  description: string | null;
 
-  // @Prop()
-  // avatar?: string;
+  @Prop({ type: String, default: null })
+  avatar: string | null;
 
-  // Optimization: last message preview
   @Prop({ type: Types.ObjectId, ref: 'Message', default: null })
-  lastMessage?: Types.ObjectId;
+  lastMessage: Types.ObjectId | null;
+
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  creator: Types.ObjectId | string;
+
+  @Prop({ type: Number, default: 0 })
+  unreadCount: number;
 
   @Prop({ default: false })
   isArchived: boolean;

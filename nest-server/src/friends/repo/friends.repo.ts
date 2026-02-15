@@ -52,7 +52,7 @@ export class FriendsRepo {
           ],
           isBlocked: false,
         })
-        .populate('user friend')
+        .populate('friend user')
         .exec(),
     );
   }

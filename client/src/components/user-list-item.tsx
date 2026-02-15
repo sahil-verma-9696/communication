@@ -5,27 +5,40 @@ import getNameAsAvtar from "@/services/getNameAsAvtar";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import { UserProfile } from "./user-profile";
 
-export function UserListItem({ user }: { user: User }) {
+export function UserListItem({
+  user,
+  lslot,
+  nameBadge,
+}: {
+  user: User;
+  lslot?: React.ReactNode;
+  nameBadge?: React.ReactNode;
+}) {
   return (
-    <Card className="w-full rounded-md p-2 text-left hover:bg-accent focus:bg-accent focus:outline-none flex justify-between shadow-none border-none">
-      <div className="flex gap-2">
+    <Card
+      data-slot="user-list-item"
+      className="w-full rounded-md p-2 text-left hover:bg-accent focus:bg-accent focus:outline-none flex flex-row items-center justify-between shadow-none border-none"
+    >
+      <div className="flex items-center gap-2">
         <Avatar className="rounded-full size-12 overflow-hidden bg-gray-200 flex justify-center items-center">
           <AvatarImage src={user.avatar || ""} alt={user.name} />
           <AvatarFallback>{getNameAsAvtar(user.name)}</AvatarFallback>
         </Avatar>
-        <div>
+        <div className="w-fit">
           <Dialog>
             <DialogTrigger asChild>
-              <div className="font-medium cursor-pointer">{user.name}</div>
+              <span className="font-medium cursor-pointer">
+                {user.name} {nameBadge}
+              </span>
             </DialogTrigger>
             <DialogContent showCloseButton={false}>
               <UserProfile userId={user._id} />
             </DialogContent>
           </Dialog>
-
-          <div className="text-sm text-muted-foreground">{user.email}</div>
+          <p className="text-sm text-muted-foreground">{user.email}</p>
         </div>
       </div>
+      {lslot}
     </Card>
   );
 }

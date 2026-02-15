@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-// import { UpdateFriendDto } from './dto/update-friend.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Friend, FriendDocument } from './schema/friends.schema';
 import { Model, Types } from 'mongoose';
@@ -24,7 +23,8 @@ export class FriendsService {
     });
   }
 
-  async getAllUserFriends(userId: string) {
+  // Not in use currently.
+  async getAllUserFriendsWithChat(userId: string) {
     const currentUserId = new Types.ObjectId(userId);
 
     return this.friendModel.aggregate<FriendListItem[]>([
@@ -121,6 +121,10 @@ export class FriendsService {
         },
       },
     ]);
+  }
+
+  getAllUserFriends(userId: string) {
+    return this.repo.getUserFriendsPopulated(userId);
   }
 
   blockFriendship(id: string, userId: string) {

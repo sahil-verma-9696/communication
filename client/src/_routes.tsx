@@ -13,6 +13,7 @@ import {
 import PrivateLayout from "./private.layout";
 import { SignupPage } from "./pages/signup";
 import { ProfilePage } from "./pages/profile";
+import { ChatPage } from "./pages/chat";
 
 export const friendChilds: RouteObject[] = [
   {
@@ -53,7 +54,11 @@ export const protectedChilds: RouteObject[] = [
   },
   {
     path: "profile",
-    Component: ProfilePage,
+    element: <ProfilePage />,
+  },
+  {
+    path: "chats",
+    element: <ChatPage />,
   },
 ];
 

@@ -316,7 +316,7 @@ export class FriendRequestRepo {
           { status },
           { new: true },
         )
-        .lean<FriendRequestPopulated>()
+        .lean()
         .exec(),
     );
   }

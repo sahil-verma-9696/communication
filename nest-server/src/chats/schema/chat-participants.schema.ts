@@ -3,9 +3,9 @@ import { Document, Types } from 'mongoose';
 
 export type ChatParticipantDocument = ChatParticipant & Document;
 
-export enum ChatParticipantRole {
+export enum PARTICIPANT_ROLE {
   OWNER = 'owner',
-  PARTICIPANT = 'participant',
+  MEMBER = 'member',
   ADMIN = 'admin',
 }
 
@@ -19,14 +19,11 @@ export class ChatParticipant {
 
   @Prop({
     type: String,
-    enum: ChatParticipantRole,
+    enum: PARTICIPANT_ROLE,
     required: true,
-    default: ChatParticipantRole.PARTICIPANT,
+    default: PARTICIPANT_ROLE.MEMBER,
   })
-  role: ChatParticipantRole;
-
-  @Prop({ default: 0 })
-  unreadCount: number;
+  role: PARTICIPANT_ROLE;
 
   @Prop({ default: false })
   isDeleted: boolean;

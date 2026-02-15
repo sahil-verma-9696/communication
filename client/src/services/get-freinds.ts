@@ -1,15 +1,19 @@
 import { SERVER_URL } from "@/app.constatns";
 import localSpace from "./local-space";
 import { apiFetch } from "@/utils/api-fetch";
+import type { User } from "./auth";
 /*******************************************************************
  *********************************** Types *************************
  *******************************************************************/
 
-export interface FriendListResponse {
+export interface Friend {
   _id: string;
-  name: string;
-  email: string;
-  directChatId: string | null;
+  user: User;
+  friend: User;
+  isBlocked: boolean;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
 }
 
 /**
@@ -18,8 +22,8 @@ export interface FriendListResponse {
  *
  * using network it fetch the friends of a user.
  */
-export default async function getFriends(): Promise<FriendListResponse[]> {
-  return apiFetch<FriendListResponse[]>({
+export default async function getFriends(): Promise<Friend[]> {
+  return apiFetch<Friend[]>({
     url: `${SERVER_URL}/friends`,
     method: "GET",
     headers: {

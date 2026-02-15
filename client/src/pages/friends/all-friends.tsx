@@ -1,11 +1,20 @@
-import { cn } from "@/lib/utils";
-import { Loader2, AlertCircle, Users } from "lucide-react";
+import {
+  Loader2,
+  AlertCircle,
+  Users,
+  MessageCircleIcon,
+  Phone,
+  Video,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import useAsyncState from "@/hooks/use-async-state";
-import type { FriendListResponse } from "@/services/get-freinds";
 import React from "react";
-import getFriends from "@/services/get-freinds";
+import getFriends, { type Friend } from "@/services/get-freinds";
 import { useAppContext } from "@/contexts/app.context";
+import { UserListItem } from "@/components/user-list-item";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router";
+import localSpace from "@/services/local-space";
 
 export default function Page() {
   const { onlineUsers } = useAppContext();
@@ -17,14 +26,14 @@ export default function Page() {
     setError: setAllFriendsError,
     loading: loadingAllFriends,
     setLoading: setLoadingAllFriends,
-  } = useAsyncState<FriendListResponse[]>();
+  } = useAsyncState<Friend[]>();
 
   // MAP friends with online status
   const allFriendsWithStatus = React.useMemo(() => {
     return allFriends?.map((friend) => {
       return {
-        ...friend,
-        online: onlineUsers.some((user) => user.userId === friend._id),
+        friend,
+        online: onlineUsers.some((user) => user.userId === friend.friend._id),
       };
     });
   }, [allFriends, onlineUsers]);
@@ -35,7 +44,6 @@ export default function Page() {
       try {
         setLoadingAllFriends(true);
         const friends = await getFriends();
-        console.log(friends);
 
         setAllFriends(friends);
 
@@ -89,51 +97,48 @@ export default function Page() {
   return (
     <div className="pt-4">
       <div className="space-y-2">
-        {allFriendsWithStatus.map((friend) => {
-          const isOnline = friend.online;
-
+        {allFriendsWithStatus.map(({ online, friend }) => {
           return (
-            <div
+            <UserListItem
               key={friend._id}
-              className={cn(
-                "flex items-center gap-3 rounded-lg border p-4 transition",
-                isOnline
-                  ? "bg-background opacity-100"
-                  : "bg-muted/40 opacity-60",
-              )}
-            >
-              {/* Avatar placeholder */}
-              <div
-                className={cn(
-                  "h-10 w-10 rounded-full flex items-center justify-center text-xs font-semibold",
-                  isOnline
-                    ? "bg-green-500/10 text-green-600"
-                    : "bg-gray-300 text-gray-600",
-                )}
-              >
-                {friend.name.charAt(0).toUpperCase()}
-              </div>
-
-              <div className="flex-1">
-                <p className="text-sm font-medium">{friend.name}</p>
-                {friend.email && (
-                  <p className="text-xs text-muted-foreground">
-                    {friend.email}
-                  </p>
-                )}
-              </div>
-
-              {/* Status badge */}
-              <Badge
-                variant={isOnline ? "default" : "secondary"}
-                className={cn(
-                  "text-xs",
-                  isOnline && "bg-green-600 hover:bg-green-600",
-                )}
-              >
-                {isOnline ? "Online" : "Offline"}
-              </Badge>
-            </div>
+              user={
+                localSpace.getUser()?._id === friend.friend._id
+                  ? friend.user
+                  : friend.friend
+              }
+              nameBadge={
+                online ? (
+                  <Badge
+                    variant="outline"
+                    className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                  >
+                    Online
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant="outline"
+                    className="bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+                  >
+                    Offline
+                  </Badge>
+                )
+              }
+              lslot={
+                <div className="flex gap-2 items-center">
+                  <Button variant={"outline"}>
+                    <Link to={`/me/chats?userId=${friend.friend._id}`}>
+                      <MessageCircleIcon />
+                    </Link>
+                  </Button>
+                  <Button variant={"outline"}>
+                    <Video />
+                  </Button>
+                  <Button variant={"outline"}>
+                    <Phone />
+                  </Button>
+                </div>
+              }
+            />
           );
         })}
       </div>

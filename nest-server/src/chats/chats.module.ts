@@ -7,7 +7,8 @@ import {
   ChatParticipantSchema,
 } from './schema/chat-participants.schema';
 import { Chat, ChatSchema } from './schema/chat.schema';
-import { Group, GroupSchema } from './schema/group.schema';
+import { ChatRepo } from './repo/chats.repo';
+import { ChatParticipantRepo } from './repo/chats-participant.repo';
 
 @Module({
   imports: [
@@ -15,9 +16,8 @@ import { Group, GroupSchema } from './schema/group.schema';
       { name: ChatParticipant.name, schema: ChatParticipantSchema },
     ]),
     MongooseModule.forFeature([{ name: Chat.name, schema: ChatSchema }]),
-    MongooseModule.forFeature([{ name: Group.name, schema: GroupSchema }]),
   ],
   controllers: [ChatsController],
-  providers: [ChatsService],
+  providers: [ChatsService, ChatRepo, ChatParticipantRepo],
 })
 export class ChatsModule {}
